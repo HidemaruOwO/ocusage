@@ -46,3 +46,6 @@ $RECYCLE.BIN/
 # --- opencode ---
 .opencode/
 .specify
+
+# --- Node.js / JavaScript / TypeScript ---
+node_modules/
