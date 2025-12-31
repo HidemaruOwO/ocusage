@@ -42,3 +42,7 @@ $RECYCLE.BIN/
 
 # ----- direnv -----
 .direnv/
+
+# --- opencode ---
+.opencode/
+.specify
