@@ -1,0 +1,44 @@
+# ----- OS -----
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+# Linux / misc editors backups
+*~
+*.swp
+*.swo
+*.tmp
+
+# ----- IDE / Editors -----
+# VS Code workspace settings and caches
+.vscode/
+# JetBrains (IntelliJ, WebStorm, PyCharm, Rider, etc.)
+.idea/
+# Sublime
+*.sublime-workspace
+*.sublime-project
+# Vim
+*.vim/
+# Emacs
+.emacs.d/
+# Visual Studio
+.vs/
+
+# Serena
+.serena/cache
+
+# ----- Env / Secrets (keep examples) -----
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# ----- direnv -----
+.direnv/
