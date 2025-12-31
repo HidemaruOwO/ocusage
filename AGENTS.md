@@ -10,7 +10,7 @@ Talk to the user in natural Japanese.
    - Wait until the user writes "approve plan" before doing changes.
 
 2. Branching
-   - Work on a branch from `develop` such as `feature/<short>` or `fix/<short>` (see "Branch Naming").
+   - Work on a branch from `master` such as `feature/<short>` or `fix/<short>` (see "Branch Naming").
 
 3. Tests and Quality
    - For every non-trivial change, add or update unit tests in the best-practice Go location.
@@ -51,8 +51,10 @@ Talk to the user in natural Japanese.
 - When the user gives URLs, use `@fetch` to get the content and base your answer on it.
 
 ## Active Technologies
+
 - TypeScript 5.x on Bun 1.x (Bun専用、Node.js/Deno互換性なし) + gunshi (CLI), consola (logging) (001-opencode-usage-tracker)
 - N/A (ファイルシステム読み込みのみ) (001-opencode-usage-tracker)
 
 ## Recent Changes
+
 - 001-opencode-usage-tracker: Added TypeScript 5.x on Bun 1.x (Bun専用、Node.js/Deno互換性なし) + gunshi (CLI), consola (logging)
