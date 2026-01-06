@@ -49,3 +49,4 @@ $RECYCLE.BIN/
 
 # --- Node.js / JavaScript / TypeScript ---
 node_modules/
+dist/
