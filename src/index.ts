@@ -1,4 +1,5 @@
 import { cli, define } from 'gunshi';
+import sessionsCommand from '@/commands/sessions';
 
 const main = define({
 	name: 'ocusage',
@@ -24,4 +25,7 @@ const main = define({
 await cli(process.argv.slice(2), main, {
 	name: 'ocusage',
 	version: '0.1.0',
+	subCommands: {
+		sessions: sessionsCommand,
+	},
 });
