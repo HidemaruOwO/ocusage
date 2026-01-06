@@ -73,6 +73,9 @@ const tokensToCost = (tokens: number, costPerMillion: number): number => {
 	return (tokens / 1_000_000) * costPerMillion;
 };
 
+// 未知モデルの警告を1回だけ表示するためのキャッシュ
+const warnedModels = new Set<string>();
+
 export const loadModelConfigs = async (modelsFile: string): Promise<ModelConfigMap> => {
 	const exists = await fileExists(modelsFile);
 	if (!exists) {
@@ -125,7 +128,10 @@ export const calculateUsageCost = (
 
 	const config = configs[modelId];
 	if (!config) {
-		consola.warn(`Unknown model: ${modelId} (cost set to 0)`);
+		if (!warnedModels.has(modelId)) {
+			warnedModels.add(modelId);
+			consola.warn(`Unknown model: ${modelId} (cost set to 0)`);
+		}
 		return {
 			inputTokens,
 			outputTokens,
@@ -156,4 +162,9 @@ export const calculateMessageCost = (message: Message, configs: ModelConfigMap):
 	if (!message.tokens) return createEmptyUsageSummary();
 
 	return calculateUsageCost(normalizeTokens(message.tokens), message.modelID, configs);
+};
+
+/** テスト用: 警告キャッシュをリセット */
+export const resetWarnedModels = (): void => {
+	warnedModels.clear();
 };
