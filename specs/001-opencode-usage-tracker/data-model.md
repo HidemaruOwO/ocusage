@@ -55,48 +55,48 @@ OpenCodeが生成するメッセージJSONの型定義。
 /** メッセージの時間情報 */
 interface MessageTime {
   /** メッセージ作成時刻 (Unix epoch ms) */
-  created: number
+  created: number;
   /** メッセージ完了時刻 (Unix epoch ms) - assistantのみ */
-  completed?: number
+  completed?: number;
 }
 
 /** キャッシュトークン情報 */
 interface CacheTokens {
-  read: number
-  write: number
+  read: number;
+  write: number;
 }
 
 /** トークン使用量 */
 interface TokenUsage {
-  input: number
-  output: number
-  reasoning: number
-  cache: CacheTokens
+  input: number;
+  output: number;
+  reasoning: number;
+  cache: CacheTokens;
 }
 
 /** メッセージロール */
-type MessageRole = 'user' | 'assistant'
+type MessageRole = "user" | "assistant";
 
 /** OpenCodeメッセージ */
 interface Message {
   /** メッセージID (msg_xxx形式) */
-  id: string
+  id: string;
   /** セッションID (ses_xxx形式) */
-  sessionID: string
+  sessionID: string;
   /** メッセージロール */
-  role: MessageRole
+  role: MessageRole;
   /** 時間情報 */
-  time: MessageTime
+  time: MessageTime;
   /** モデルID */
-  modelID: string
+  modelID: string;
   /** プロバイダーID */
-  providerID: string
+  providerID: string;
   /** トークン使用量 - assistantのみ */
-  tokens?: TokenUsage
+  tokens?: TokenUsage;
   /** コスト（常に0、自前計算が必要） */
-  cost: number
+  cost: number;
   /** 完了理由 */
-  finish?: string
+  finish?: string;
 }
 ```
 
@@ -108,22 +108,22 @@ interface Message {
 /** セッション情報 */
 interface Session {
   /** セッションID (ses_xxx形式) */
-  id: string
+  id: string;
   /** セッション開始時刻 (Unix epoch ms) */
-  startTime: number
+  startTime: number;
   /** セッション終了時刻 (Unix epoch ms) */
-  endTime: number
+  endTime: number;
   /** 使用モデル（単一モデルまたは "mixed"） */
-  model: string
+  model: string;
   /** セッション内のメッセージ一覧 */
-  messages: Message[]
+  messages: Message[];
   /** 使用量サマリー */
-  usage: UsageSummary
+  usage: UsageSummary;
 }
 
 /** セッション時間（分単位） */
 function getSessionDurationMinutes(session: Session): number {
-  return (session.endTime - session.startTime) / 60000
+  return (session.endTime - session.startTime) / 60000;
 }
 ```
 
@@ -135,19 +135,19 @@ function getSessionDurationMinutes(session: Session): number {
 /** 使用量サマリー */
 interface UsageSummary {
   /** 入力トークン合計 */
-  inputTokens: number
+  inputTokens: number;
   /** 出力トークン合計 */
-  outputTokens: number
+  outputTokens: number;
   /** キャッシュトークン合計 (read + write) */
-  cacheTokens: number
+  cacheTokens: number;
   /** 入力コスト (USD) */
-  inputCost: number
+  inputCost: number;
   /** 出力コスト (USD) */
-  outputCost: number
+  outputCost: number;
   /** キャッシュコスト (USD) */
-  cacheCost: number
+  cacheCost: number;
   /** 総コスト (USD) */
-  totalCost: number
+  totalCost: number;
 }
 
 /** 空のUsageSummary */
@@ -160,7 +160,7 @@ function createEmptyUsageSummary(): UsageSummary {
     outputCost: 0,
     cacheCost: 0,
     totalCost: 0,
-  }
+  };
 }
 
 /** UsageSummaryの合算 */
@@ -173,7 +173,7 @@ function mergeUsageSummaries(a: UsageSummary, b: UsageSummary): UsageSummary {
     outputCost: a.outputCost + b.outputCost,
     cacheCost: a.cacheCost + b.cacheCost,
     totalCost: a.totalCost + b.totalCost,
-  }
+  };
 }
 ```
 
@@ -185,23 +185,23 @@ function mergeUsageSummaries(a: UsageSummary, b: UsageSummary): UsageSummary {
 /** モデル設定 */
 interface ModelConfig {
   /** 入力トークン単価 (USD per million) */
-  inputCostPerMillion: number
+  inputCostPerMillion: number;
   /** 出力トークン単価 (USD per million) */
-  outputCostPerMillion: number
+  outputCostPerMillion: number;
   /** キャッシュトークン単価 (USD per million) - 任意 */
-  cacheCostPerMillion?: number
+  cacheCostPerMillion?: number;
   /** コンテキストウィンドウサイズ */
-  contextWindow: number
+  contextWindow: number;
   /** モデル説明 */
-  description: string
+  description: string;
 }
 
 /** モデル設定マップ */
-type ModelConfigMap = Record<string, ModelConfig>
+type ModelConfigMap = Record<string, ModelConfig>;
 
 /** キャッシュコストを取得（未設定時はinputコストを使用） */
 function getCacheCostPerMillion(config: ModelConfig): number {
-  return config.cacheCostPerMillion ?? config.inputCostPerMillion
+  return config.cacheCostPerMillion ?? config.inputCostPerMillion;
 }
 ```
 
@@ -211,19 +211,19 @@ function getCacheCostPerMillion(config: ModelConfig): number {
 /** アプリケーション設定 */
 interface AppConfig {
   /** メッセージディレクトリパス */
-  messagesDir: string
+  messagesDir: string;
   /** models.jsonパス */
-  modelsFile: string
+  modelsFile: string;
   /** ログレベル */
-  logLevel: 'debug' | 'info' | 'warn' | 'error'
+  logLevel: "debug" | "info" | "warn" | "error";
 }
 
 /** デフォルト設定 */
 const DEFAULT_CONFIG: AppConfig = {
   messagesDir: `${Bun.env.HOME}/.local/share/opencode/storage/message`,
   modelsFile: `${Bun.env.HOME}/.config/ocusage/models.json`,
-  logLevel: 'warn',
-}
+  logLevel: "warn",
+};
 ```
 
 ## Validation Rules
@@ -233,20 +233,20 @@ const DEFAULT_CONFIG: AppConfig = {
 ```typescript
 /** メッセージの妥当性検証 */
 function isValidMessage(data: unknown): data is Message {
-  if (typeof data !== 'object' || data === null) return false
-  
-  const msg = data as Record<string, unknown>
-  
+  if (typeof data !== "object" || data === null) return false;
+
+  const msg = data as Record<string, unknown>;
+
   // 必須フィールド
-  if (typeof msg.id !== 'string') return false
-  if (typeof msg.sessionID !== 'string') return false
-  if (msg.role !== 'user' && msg.role !== 'assistant') return false
-  if (typeof msg.time !== 'object' || msg.time === null) return false
-  
-  const time = msg.time as Record<string, unknown>
-  if (typeof time.created !== 'number') return false
-  
-  return true
+  if (typeof msg.id !== "string") return false;
+  if (typeof msg.sessionID !== "string") return false;
+  if (msg.role !== "user" && msg.role !== "assistant") return false;
+  if (typeof msg.time !== "object" || msg.time === null) return false;
+
+  const time = msg.time as Record<string, unknown>;
+  if (typeof time.created !== "number") return false;
+
+  return true;
 }
 ```
 
@@ -256,9 +256,9 @@ function isValidMessage(data: unknown): data is Message {
 /** メッセージからトークン使用量を抽出 */
 function extractTokens(message: Message): TokenUsage | null {
   // userロールにはtokensがない
-  if (message.role === 'user') return null
-  if (!message.tokens) return null
-  
+  if (message.role === "user") return null;
+  if (!message.tokens) return null;
+
   return {
     input: message.tokens.input ?? 0,
     output: message.tokens.output ?? 0,
@@ -267,7 +267,7 @@ function extractTokens(message: Message): TokenUsage | null {
       read: message.tokens.cache?.read ?? 0,
       write: message.tokens.cache?.write ?? 0,
     },
-  }
+  };
 }
 ```
 
@@ -279,19 +279,19 @@ function extractTokens(message: Message): TokenUsage | null {
 [File Discovery] → [Message Parsing] → [Session Building] → [Aggregation]
 ```
 
-1. **File Discovery**: Bun.Globでmsg_*.jsonを走査
+1. **File Discovery**: Bun.Globでmsg\_\*.jsonを走査
 2. **Message Parsing**: 各JSONファイルをパース（エラー時はスキップ）
 3. **Session Building**: sessionIDでグルーピング
 4. **Aggregation**: トークン集計・コスト計算
 
 ### Error States
 
-| 状態 | 処理 | 終了コード |
-|------|------|-----------|
-| ディレクトリ不在 | エラー終了 | 1 |
-| JSONパースエラー | 警告＆スキップ | 0 |
-| 未知のモデル | 警告＆コスト0 | 0 |
-| models.json不在 | 警告＆全コスト0 | 0 |
+| 状態             | 処理            | 終了コード |
+| ---------------- | --------------- | ---------- |
+| ディレクトリ不在 | エラー終了      | 1          |
+| JSONパースエラー | 警告＆スキップ  | 0          |
+| 未知のモデル     | 警告＆コスト0   | 0          |
+| models.json不在  | 警告＆全コスト0 | 0          |
 
 ## Output Schemas
 
@@ -299,16 +299,16 @@ function extractTokens(message: Message): TokenUsage | null {
 
 ```typescript
 interface CsvRow {
-  session_id: string
-  date: string           // YYYY-MM-DD
-  start_time: string     // HH:MM:SS
-  end_time: string       // HH:MM:SS
-  duration_minutes: number
-  model: string
-  input_tokens: number
-  output_tokens: number
-  cache_tokens: number
-  total_cost: number
+  session_id: string;
+  date: string; // YYYY-MM-DD
+  start_time: string; // HH:MM:SS
+  end_time: string; // HH:MM:SS
+  duration_minutes: number;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  cache_tokens: number;
+  total_cost: number;
 }
 ```
 
@@ -317,34 +317,34 @@ interface CsvRow {
 ```typescript
 interface JsonExport {
   metadata: {
-    export_date: string  // ISO 8601
-    tool_version: string
-    total_sessions: number
+    export_date: string; // ISO 8601
+    tool_version: string;
+    total_sessions: number;
     date_range: {
-      start: string      // YYYY-MM-DD
-      end: string        // YYYY-MM-DD
-    }
-  }
-  sessions: SessionExport[]
+      start: string; // YYYY-MM-DD
+      end: string; // YYYY-MM-DD
+    };
+  };
+  sessions: SessionExport[];
 }
 
 interface SessionExport {
-  session_id: string
-  date: string
-  start_time: string
-  end_time: string
-  duration_minutes: number
-  model: string
+  session_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  model: string;
   tokens: {
-    input: number
-    output: number
-    cache: number
-  }
+    input: number;
+    output: number;
+    cache: number;
+  };
   cost: {
-    input: number
-    output: number
-    cache: number
-    total: number
-  }
+    input: number;
+    output: number;
+    cache: number;
+    total: number;
+  };
 }
 ```

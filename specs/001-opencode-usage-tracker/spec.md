@@ -5,7 +5,7 @@
 **Status**: Draft  
 **Input**: ocmonitor互換のOpenCodeトークン使用量追跡CLIツール
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - セッション一覧の表示 (Priority: P1)
 
@@ -16,6 +16,7 @@
 **Independent Test**: セッション一覧コマンドを実行し、ローカルのOpenCodeデータから正しくセッション情報が抽出・表示されることを確認できる。
 
 **CLI Example**:
+
 ```bash
 ocusage sessions                          # 全セッション一覧
 ocusage sessions --from 2025-01-01        # 期間指定
@@ -40,6 +41,7 @@ ocusage sessions --model anthropic/claude-opus-4.5  # モデル指定
 **Independent Test**: エクスポートコマンドを実行し、指定フォーマット（CSV/JSON）でファイルが生成され、ocmonitor互換のスキーマに従っていることを確認できる。
 
 **CLI Example**:
+
 ```bash
 ocusage export --format csv --output sessions.csv
 ocusage export --format json --output sessions.json
@@ -64,6 +66,7 @@ ocusage export --format csv --from 2025-01-01 --to 2025-01-31
 **Independent Test**: モデル別集計コマンドを実行し、各モデルごとの合計トークン数とコストが正しく集計・表示されることを確認できる。
 
 **CLI Example**:
+
 ```bash
 ocusage models                            # 全期間のモデル別集計
 ocusage models --from 2025-01-01          # 期間指定
@@ -85,6 +88,7 @@ ocusage models --from 2025-01-01          # 期間指定
 **Independent Test**: 各期間集計コマンドを実行し、正しい期間でグルーピングされた集計結果が表示されることを確認できる。
 
 **CLI Example**:
+
 ```bash
 ocusage daily                             # 日別集計
 ocusage weekly --from 2025-01-01          # 週別集計（期間指定）
@@ -108,6 +112,7 @@ ocusage monthly                           # 月別集計
 **Independent Test**: 特定のセッションIDを指定してコマンドを実行し、そのセッション内の全メッセージ情報が詳細に表示されることを確認できる。
 
 **CLI Example**:
+
 ```bash
 ocusage session ses_48be92eaeffepmcHE35j3U6N6f
 ```
@@ -128,6 +133,7 @@ ocusage session ses_48be92eaeffepmcHE35j3U6N6f
 **Independent Test**: liveコマンドを実行し、OpenCodeが新しいメッセージを生成するたびに表示が更新されることを確認できる。
 
 **CLI Example**:
+
 ```bash
 ocusage live                              # リアルタイム監視開始
 ```
@@ -153,40 +159,40 @@ ocusage live                              # リアルタイム監視開始
 
 ### サブコマンド一覧
 
-| コマンド | 説明 | 例 |
-|---------|------|-----|
-| `sessions` | セッション一覧表示 | `ocusage sessions` |
-| `session <id>` | セッション詳細表示 | `ocusage session ses_xxx` |
-| `models` | モデル別集計 | `ocusage models` |
-| `daily` | 日別集計 | `ocusage daily` |
-| `weekly` | 週別集計 | `ocusage weekly` |
-| `monthly` | 月別集計 | `ocusage monthly` |
-| `export` | CSV/JSONエクスポート | `ocusage export --format csv` |
-| `live` | リアルタイム監視 | `ocusage live` |
+| コマンド       | 説明                 | 例                            |
+| -------------- | -------------------- | ----------------------------- |
+| `sessions`     | セッション一覧表示   | `ocusage sessions`            |
+| `session <id>` | セッション詳細表示   | `ocusage session ses_xxx`     |
+| `models`       | モデル別集計         | `ocusage models`              |
+| `daily`        | 日別集計             | `ocusage daily`               |
+| `weekly`       | 週別集計             | `ocusage weekly`              |
+| `monthly`      | 月別集計             | `ocusage monthly`             |
+| `export`       | CSV/JSONエクスポート | `ocusage export --format csv` |
+| `live`         | リアルタイム監視     | `ocusage live`                |
 
 ### 共通フラグ
 
-| フラグ | 短縮 | 説明 | デフォルト |
-|-------|------|------|-----------|
-| `--from <date>` | `-f` | 開始日（YYYY-MM-DD） | なし（全期間） |
-| `--to <date>` | `-t` | 終了日（YYYY-MM-DD） | なし（全期間） |
-| `--model <name>` | `-m` | モデル名でフィルタ | なし（全モデル） |
-| `--path <dir>` | `-p` | メッセージディレクトリ | 環境依存デフォルト |
-| `--config <file>` | `-c` | 設定ファイルパス | `~/.config/ocusage/config.toml` |
-| `--output <file>` | `-o` | 出力ファイル（exportのみ） | stdout |
-| `--format <fmt>` | | 出力形式（csv/json） | csv |
-| `--sort <field>` | `-s` | ソート対象（date/cost/tokens） | date |
-| `--order <dir>` | | ソート順（asc/desc） | desc |
-| `--help` | `-h` | ヘルプ表示 | - |
-| `--version` | `-v` | バージョン表示 | - |
+| フラグ            | 短縮 | 説明                           | デフォルト                      |
+| ----------------- | ---- | ------------------------------ | ------------------------------- |
+| `--from <date>`   | `-f` | 開始日（YYYY-MM-DD）           | なし（全期間）                  |
+| `--to <date>`     | `-t` | 終了日（YYYY-MM-DD）           | なし（全期間）                  |
+| `--model <name>`  | `-m` | モデル名でフィルタ             | なし（全モデル）                |
+| `--path <dir>`    | `-p` | メッセージディレクトリ         | 環境依存デフォルト              |
+| `--config <file>` | `-c` | 設定ファイルパス               | `~/.config/ocusage/config.toml` |
+| `--output <file>` | `-o` | 出力ファイル（exportのみ）     | stdout                          |
+| `--format <fmt>`  |      | 出力形式（csv/json）           | csv                             |
+| `--sort <field>`  | `-s` | ソート対象（date/cost/tokens） | date                            |
+| `--order <dir>`   |      | ソート順（asc/desc）           | desc                            |
+| `--help`          | `-h` | ヘルプ表示                     | -                               |
+| `--version`       | `-v` | バージョン表示                 | -                               |
 
 ### 終了コード
 
-| コード | 意味 |
-|--------|------|
-| 0 | 正常終了 |
-| 1 | 一般エラー（ディレクトリ不在、セッション不在など） |
-| 2 | 引数/設定エラー（不正なフラグ、日付形式エラーなど） |
+| コード | 意味                                                |
+| ------ | --------------------------------------------------- |
+| 0      | 正常終了                                            |
+| 1      | 一般エラー（ディレクトリ不在、セッション不在など）  |
+| 2      | 引数/設定エラー（不正なフラグ、日付形式エラーなど） |
 
 ### 出力形式
 
@@ -194,7 +200,7 @@ ocusage live                              # リアルタイム監視開始
 - 詳細表示: 構造化テキスト（キー: 値形式）
 - エクスポート: CSV/JSON（下記スキーマ参照）
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -227,7 +233,7 @@ ocusage live                              # リアルタイム監視開始
 
 ### Key Entities
 
-- **Session**: OpenCodeの1セッションを表す。セッションIDはディレクトリ名（ses_で始まる）から取得。開始時刻・終了時刻は配下メッセージの最小・最大created時刻から算出。
+- **Session**: OpenCodeの1セッションを表す。セッションIDはディレクトリ名（ses\_で始まる）から取得。開始時刻・終了時刻は配下メッセージの最小・最大created時刻から算出。
 - **Message**: 1つのAPI呼び出しを表す。id, sessionID, role, time（created, completed）, modelID, providerID, tokens（input, output, reasoning, cache）を持つ。
 - **Model**: モデル定義。model_key, input_cost_per_million, output_cost_per_million, cache_cost_per_million（任意）, context_window, descriptionを持つ。
 - **UsageSummary**: 集計結果。input_tokens, output_tokens, cache_tokens（read+write合算）, input_cost, output_cost, cache_cost, total_costを持つ。
@@ -238,18 +244,18 @@ ocusage live                              # リアルタイム監視開始
 
 列順序と型:
 
-| 列名 | 型 | 説明 |
-|------|-----|------|
-| session_id | string | セッションID（例: ses_xxx） |
-| date | string | セッション開始日（YYYY-MM-DD、ローカルTZ） |
-| start_time | string | 開始時刻（HH:MM:SS、ローカルTZ） |
-| end_time | string | 終了時刻（HH:MM:SS、ローカルTZ） |
-| duration_minutes | number | セッション時間（分、小数点1桁） |
-| model | string | 使用モデル（単一）または "mixed" |
-| input_tokens | integer | 入力トークン合計 |
-| output_tokens | integer | 出力トークン合計 |
-| cache_tokens | integer | キャッシュトークン合計（read + write） |
-| total_cost | number | 総コスト（USD、小数点4桁） |
+| 列名             | 型      | 説明                                       |
+| ---------------- | ------- | ------------------------------------------ |
+| session_id       | string  | セッションID（例: ses_xxx）                |
+| date             | string  | セッション開始日（YYYY-MM-DD、ローカルTZ） |
+| start_time       | string  | 開始時刻（HH:MM:SS、ローカルTZ）           |
+| end_time         | string  | 終了時刻（HH:MM:SS、ローカルTZ）           |
+| duration_minutes | number  | セッション時間（分、小数点1桁）            |
+| model            | string  | 使用モデル（単一）または "mixed"           |
+| input_tokens     | integer | 入力トークン合計                           |
+| output_tokens    | integer | 出力トークン合計                           |
+| cache_tokens     | integer | キャッシュトークン合計（read + write）     |
+| total_cost       | number  | 総コスト（USD、小数点4桁）                 |
 
 **注意**: `cache_tokens`は内部で`cache.read + cache.write`を合算した値。
 
@@ -388,15 +394,15 @@ total_cost  = input_cost + output_cost + cache_cost
 
 ### エラー種別と対応
 
-| エラー | 対応 | 終了コード |
-|--------|------|-----------|
-| メッセージディレクトリ不在 | エラー終了 | 1 |
-| セッション不在（指定ID） | エラー終了 | 1 |
-| JSONパースエラー（個別ファイル） | 警告出力、スキップ、処理継続 | 0 |
-| 未知のモデルID | 警告出力、コスト0で計算、処理継続 | 0 |
-| models.json不在 | 警告出力、全コスト0で計算、処理継続 | 0 |
-| 無効な日付形式 | エラー終了 | 2 |
-| 不正なフラグ | エラー終了 | 2 |
+| エラー                           | 対応                                | 終了コード |
+| -------------------------------- | ----------------------------------- | ---------- |
+| メッセージディレクトリ不在       | エラー終了                          | 1          |
+| セッション不在（指定ID）         | エラー終了                          | 1          |
+| JSONパースエラー（個別ファイル） | 警告出力、スキップ、処理継続        | 0          |
+| 未知のモデルID                   | 警告出力、コスト0で計算、処理継続   | 0          |
+| models.json不在                  | 警告出力、全コスト0で計算、処理継続 | 0          |
+| 無効な日付形式                   | エラー終了                          | 2          |
+| 不正なフラグ                     | エラー終了                          | 2          |
 
 ### 警告メッセージ形式
 
@@ -406,7 +412,7 @@ total_cost  = input_cost + output_cost + cache_cost
 [WARN] models.json not found at ~/.config/ocusage/models.json (all costs set to 0)
 ```
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 
@@ -419,7 +425,7 @@ total_cost  = input_cost + output_cost + cache_cost
 
 ## Assumptions
 
-- OpenCodeのメッセージ保存形式は現在確認されたスキーマ（JSON形式、msg_*.json）から変更されないと仮定
+- OpenCodeのメッセージ保存形式は現在確認されたスキーマ（JSON形式、msg\_\*.json）から変更されないと仮定
 - セッションIDのフォーマットは`ses_`で始まるランダム文字列（ocmonitorの`ses_YYYYMMDD_HHMMSS`とは異なる）
 - メッセージのtimestampはUnix epoch（ミリ秒）形式
 - tokensフィールドはassistant roleのメッセージにのみ存在
@@ -487,18 +493,18 @@ OpenCodeのメッセージJSONスキーマ（実データから確認済み）:
 
 ```typescript
 // ファイル読み込み
-const content = await Bun.file(path).text()
-const json = await Bun.file(path).json()
+const content = await Bun.file(path).text();
+const json = await Bun.file(path).json();
 
 // ファイル書き込み
-await Bun.write(path, content)
+await Bun.write(path, content);
 
 // ディレクトリ走査
-const glob = new Bun.Glob('**/*.json')
+const glob = new Bun.Glob("**/*.json");
 for await (const file of glob.scan(dir)) {
   // ...
 }
 
 // 環境変数
-const logLevel = Bun.env.OCUSAGE_LOG_LEVEL ?? 'warn'
+const logLevel = Bun.env.OCUSAGE_LOG_LEVEL ?? "warn";
 ```

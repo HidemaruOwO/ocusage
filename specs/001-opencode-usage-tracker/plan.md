@@ -21,33 +21,33 @@ OpenCodeのトークン使用量を追跡・分析するCLIツール。Bunラン
 
 ### Bun API Priority
 
-| 用途 | 使用するAPI |
-|------|------------|
+| 用途             | 使用するAPI                              |
+| ---------------- | ---------------------------------------- |
 | ファイル読み込み | `Bun.file().text()`, `Bun.file().json()` |
-| ファイル書き込み | `Bun.write()` |
-| Glob走査 | `new Bun.Glob().scan()` |
-| 環境変数 | `Bun.env` |
-| パス操作 | `import.meta.dir`, `import.meta.path` |
+| ファイル書き込み | `Bun.write()`                            |
+| Glob走査         | `new Bun.Glob().scan()`                  |
+| 環境変数         | `Bun.env`                                |
+| パス操作         | `import.meta.dir`, `import.meta.path`    |
 
 ### Tooling
 
-| ツール | 用途 |
-|--------|------|
-| Biome | Linter/Formatter (ESLint/Prettier不使用) |
-| `@` prefix | import path alias |
-| bun test | テストフレームワーク |
+| ツール     | 用途                                     |
+| ---------- | ---------------------------------------- |
+| Biome      | Linter/Formatter (ESLint/Prettier不使用) |
+| `@` prefix | import path alias                        |
+| bun test   | テストフレームワーク                     |
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-| Principle | Status | Notes |
-|-----------|--------|-------|
-| Library-First | ✅ Pass | CLIツールとして自己完結 |
-| CLI Interface | ✅ Pass | stdin/args → stdout, errors → stderr |
-| Test-First | ⏳ Pending | 実装フェーズで適用 |
-| Observability | ✅ Pass | consola使用、OCUSAGE_LOG_LEVEL対応 |
-| Simplicity | ✅ Pass | 単一プロジェクト構成 |
+| Principle     | Status     | Notes                                |
+| ------------- | ---------- | ------------------------------------ |
+| Library-First | ✅ Pass    | CLIツールとして自己完結              |
+| CLI Interface | ✅ Pass    | stdin/args → stdout, errors → stderr |
+| Test-First    | ⏳ Pending | 実装フェーズで適用                   |
+| Observability | ✅ Pass    | consola使用、OCUSAGE_LOG_LEVEL対応   |
+| Simplicity    | ✅ Pass    | 単一プロジェクト構成                 |
 
 ## Project Structure
 
@@ -108,18 +108,18 @@ tests/
 
 ### Production
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| gunshi | ^0.x | CLI framework |
-| consola | ^3.x | Logging |
+| Package | Version | Purpose       |
+| ------- | ------- | ------------- |
+| gunshi  | ^0.x    | CLI framework |
+| consola | ^3.x    | Logging       |
 
 ### Development
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| @biomejs/biome | ^1.9 | Linter/Formatter |
-| typescript | ^5.x | Type checking |
-| @types/bun | latest | Bun type definitions |
+| Package        | Version | Purpose              |
+| -------------- | ------- | -------------------- |
+| @biomejs/biome | ^1.9    | Linter/Formatter     |
+| typescript     | ^5.x    | Type checking        |
+| @types/bun     | latest  | Bun type definitions |
 
 ## Complexity Tracking
 
@@ -127,10 +127,10 @@ tests/
 
 ## Phase Outputs
 
-| Phase | Output | Status |
-|-------|--------|--------|
-| Phase 0 | research.md | ✅ Complete |
-| Phase 1 | data-model.md | ✅ Complete |
-| Phase 1 | contracts/cli.md | ✅ Complete |
-| Phase 1 | quickstart.md | ✅ Complete |
-| Phase 2 | tasks.md | ⏳ Pending (別コマンド) |
+| Phase   | Output           | Status                  |
+| ------- | ---------------- | ----------------------- |
+| Phase 0 | research.md      | ✅ Complete             |
+| Phase 1 | data-model.md    | ✅ Complete             |
+| Phase 1 | contracts/cli.md | ✅ Complete             |
+| Phase 1 | quickstart.md    | ✅ Complete             |
+| Phase 2 | tasks.md         | ⏳ Pending (別コマンド) |

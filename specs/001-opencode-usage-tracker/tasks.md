@@ -221,32 +221,37 @@
 
 ### User Story Dependencies
 
-| Story | Priority | Can Start After | Dependencies |
-|-------|----------|-----------------|--------------|
-| US1 (sessions) | P1 | Phase 2 | None |
-| US2 (export) | P1 | Phase 2 | None (can parallel with US1) |
-| US3 (models) | P2 | Phase 2 | None |
-| US4 (daily/weekly/monthly) | P2 | Phase 2 | None |
-| US5 (session detail) | P3 | Phase 2 | None |
-| US6 (live) | P3 | Phase 2 | None |
+| Story                      | Priority | Can Start After | Dependencies                 |
+| -------------------------- | -------- | --------------- | ---------------------------- |
+| US1 (sessions)             | P1       | Phase 2         | None                         |
+| US2 (export)               | P1       | Phase 2         | None (can parallel with US1) |
+| US3 (models)               | P2       | Phase 2         | None                         |
+| US4 (daily/weekly/monthly) | P2       | Phase 2         | None                         |
+| US5 (session detail)       | P3       | Phase 2         | None                         |
+| US6 (live)                 | P3       | Phase 2         | None                         |
 
 ### Parallel Opportunities
 
 **Phase 1 (Setup)**:
+
 - T002, T003 can run in parallel
 
 **Phase 2 (Foundational)**:
+
 - T005, T006, T007, T008, T009 (models) - all parallel
 - T015, T016, T017 (lib utilities) - all parallel
 - T019, T020, T021, T022 (unit tests) - all parallel after services complete
 
 **Phase 4 (US2)**:
+
 - T026, T027 (exporter functions) - parallel
 
 **Phase 6 (US4)**:
+
 - T035, T036, T037 (period commands) - all parallel
 
 **Phase 9 (Polish)**:
+
 - T047, T048, T049 - all parallel
 
 ---
@@ -265,6 +270,7 @@
 ### Full Implementation
 
 Continue with:
+
 - Phase 5: User Story 3 - models (P2)
 - Phase 6: User Story 4 - daily/weekly/monthly (P2)
 - Phase 7: User Story 5 - session detail (P3)
@@ -275,29 +281,29 @@ Continue with:
 
 ## Task Summary
 
-| Phase | Description | Task Count |
-|-------|-------------|------------|
-| Phase 1 | Setup | 4 |
-| Phase 2 | Foundational | 18 |
-| Phase 3 | US1 - Sessions (P1) | 3 |
-| Phase 4 | US2 - Export (P1) | 6 |
-| Phase 5 | US3 - Models (P2) | 3 |
-| Phase 6 | US4 - Period (P2) | 5 |
-| Phase 7 | US5 - Session Detail (P3) | 3 |
-| Phase 8 | US6 - Live (P3) | 4 |
-| Phase 9 | Polish | 8 |
-| **TOTAL** | | **54** |
+| Phase     | Description               | Task Count |
+| --------- | ------------------------- | ---------- |
+| Phase 1   | Setup                     | 4          |
+| Phase 2   | Foundational              | 18         |
+| Phase 3   | US1 - Sessions (P1)       | 3          |
+| Phase 4   | US2 - Export (P1)         | 6          |
+| Phase 5   | US3 - Models (P2)         | 3          |
+| Phase 6   | US4 - Period (P2)         | 5          |
+| Phase 7   | US5 - Session Detail (P3) | 3          |
+| Phase 8   | US6 - Live (P3)           | 4          |
+| Phase 9   | Polish                    | 8          |
+| **TOTAL** |                           | **54**     |
 
 ### Tasks by User Story
 
-| User Story | Tasks | IDs |
-|------------|-------|-----|
-| US1 (sessions) | 3 | T023-T025 |
-| US2 (export) | 6 | T026-T031 |
-| US3 (models) | 3 | T032-T034 |
-| US4 (period) | 5 | T035-T039 |
-| US5 (session) | 3 | T040-T042 |
-| US6 (live) | 4 | T043-T046 |
+| User Story     | Tasks | IDs       |
+| -------------- | ----- | --------- |
+| US1 (sessions) | 3     | T023-T025 |
+| US2 (export)   | 6     | T026-T031 |
+| US3 (models)   | 3     | T032-T034 |
+| US4 (period)   | 5     | T035-T039 |
+| US5 (session)  | 3     | T040-T042 |
+| US6 (live)     | 4     | T043-T046 |
 
 ### MVP Scope (P1 Stories)
 

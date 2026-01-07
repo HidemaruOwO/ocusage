@@ -121,11 +121,11 @@ ocusage live
 
 ## Environment Variables
 
-| 変数 | 説明 | デフォルト |
-|------|------|-----------|
+| 変数                   | 説明                   | デフォルト                                |
+| ---------------------- | ---------------------- | ----------------------------------------- |
 | `OCUSAGE_MESSAGES_DIR` | メッセージディレクトリ | `~/.local/share/opencode/storage/message` |
-| `OCUSAGE_MODELS_FILE` | models.jsonパス | `~/.config/ocusage/models.json` |
-| `OCUSAGE_LOG_LEVEL` | ログレベル | `warn` |
+| `OCUSAGE_MODELS_FILE`  | models.jsonパス        | `~/.config/ocusage/models.json`           |
+| `OCUSAGE_LOG_LEVEL`    | ログレベル             | `warn`                                    |
 
 ## Development
 
