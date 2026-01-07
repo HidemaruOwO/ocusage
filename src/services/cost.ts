@@ -1,8 +1,7 @@
-import type { Message, ModelConfig, ModelConfigMap, TokenUsage, UsageSummary } from '@/models';
-import { getCacheCostPerMillion } from '@/models';
-import { createEmptyUsageSummary } from '@/models';
-import { dirExists, fileExists } from '@/lib/fs';
 import { consola } from 'consola';
+import { dirExists, fileExists } from '@/lib/fs';
+import type { Message, ModelConfig, ModelConfigMap, TokenUsage, UsageSummary } from '@/models';
+import { createEmptyUsageSummary, DEFAULT_MODELS, getCacheCostPerMillion } from '@/models';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -260,6 +259,10 @@ export const loadAllModelConfigs = async (
 	modelsPath: string,
 	options?: LoadModelConfigsOptions,
 ): Promise<ModelConfigMap> => {
+	if (!modelsPath) {
+		return DEFAULT_MODELS;
+	}
+
 	if (await dirExists(modelsPath)) {
 		return loadModelConfigsFromDir(modelsPath, options);
 	}
@@ -268,8 +271,7 @@ export const loadAllModelConfigs = async (
 		return loadModelConfigs(modelsPath, options);
 	}
 
-	logWarning(`Model config not found at ${modelsPath} (all costs set to 0)`, options);
-	return {};
+	return DEFAULT_MODELS;
 };
 
 export const calculateUsageCost = (

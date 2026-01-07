@@ -83,6 +83,13 @@ describe('aggregator', () => {
 		expect(session.model).toBe('mixed');
 	});
 
+	test('buildSession falls back to unknown model when missing', () => {
+		const messages = [createMessage({ modelID: '', tokens: undefined })];
+
+		const session = buildSession(messages, configs);
+		expect(session.model).toBe('unknown');
+	});
+
 	test('aggregateByModel sums usage by session model', () => {
 		const sessionA = buildSession([createMessage({ modelID: 'model-a' })], configs);
 		const sessionB = buildSession([createMessage({ modelID: 'model-b' })], configs);

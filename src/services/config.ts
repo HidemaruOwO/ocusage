@@ -1,7 +1,7 @@
+import { consola } from 'consola';
+import { expandPath } from '@/lib/fs';
 import type { AppConfig } from '@/models';
 import { DEFAULT_CONFIG } from '@/models';
-import { expandPath } from '@/lib/fs';
-import { consola } from 'consola';
 
 const isNonEmpty = (value: string | undefined): value is string => {
 	if (typeof value !== 'string') return false;
