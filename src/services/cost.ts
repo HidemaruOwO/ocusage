@@ -1,7 +1,7 @@
 import type { Message, ModelConfig, ModelConfigMap, TokenUsage, UsageSummary } from '@/models';
 import { getCacheCostPerMillion } from '@/models';
 import { createEmptyUsageSummary } from '@/models';
-import { fileExists } from '@/lib/fs';
+import { dirExists, fileExists } from '@/lib/fs';
 import { consola } from 'consola';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -73,13 +73,107 @@ const tokensToCost = (tokens: number, costPerMillion: number): number => {
 	return (tokens / 1_000_000) * costPerMillion;
 };
 
+const providerPrefixes = ['anthropic/', 'openai/', 'google/', 'xai/'] as const;
+
+type IndexedModelConfig = {
+	key: string;
+	config: ModelConfig;
+	normalizedNoDate: string;
+};
+
+const stripProviderPrefix = (modelId: string): string => {
+	for (const prefix of providerPrefixes) {
+		if (modelId.startsWith(prefix)) return modelId.slice(prefix.length);
+	}
+	return modelId;
+};
+
+const normalizeVersionSeparators = (modelId: string): string => {
+	return modelId.replace(/[._]/g, '-');
+};
+
+const stripDateSuffix = (modelId: string): string => {
+	return modelId.replace(/-\d{8}$/u, '');
+};
+
+const buildCandidateIds = (modelId: string): string[] => {
+	const normalized = normalizeVersionSeparators(stripProviderPrefix(modelId));
+	const base = stripDateSuffix(normalized);
+	const candidates: string[] = [];
+	const addCandidate = (value: string): void => {
+		if (!value) return;
+		if (!candidates.includes(value)) candidates.push(value);
+	};
+
+	addCandidate(base);
+
+	if (base.startsWith('gpt-')) {
+		const segments = base.split('-').filter(Boolean);
+		for (let i = segments.length - 1; i >= 2; i -= 1) {
+			addCandidate(segments.slice(0, i).join('-'));
+		}
+	}
+
+	return candidates;
+};
+
+const buildConfigIndex = (configs: ModelConfigMap): IndexedModelConfig[] => {
+	return Object.entries(configs).map(([key, config]) => {
+		const normalizedKey = normalizeVersionSeparators(stripProviderPrefix(key));
+		return {
+			key,
+			config,
+			normalizedNoDate: stripDateSuffix(normalizedKey),
+		};
+	});
+};
+
+const findMatchingModel = (modelId: string, configs: ModelConfigMap): ModelConfig | null => {
+	const direct = configs[modelId];
+	if (direct) return direct;
+
+	const baseId = stripProviderPrefix(modelId);
+	const baseConfig = configs[baseId];
+	if (baseConfig) {
+		consola.debug(`Using ${baseId} pricing for ${modelId}`);
+		return baseConfig;
+	}
+
+	const candidates = buildCandidateIds(baseId);
+	const indexedConfigs = buildConfigIndex(configs);
+
+	for (const candidate of candidates) {
+		const match = indexedConfigs.find(
+			(entry) =>
+				entry.normalizedNoDate === candidate || entry.normalizedNoDate.startsWith(`${candidate}-`),
+		);
+		if (match) {
+			consola.debug(`Using ${match.key} pricing for ${modelId}`);
+			return match.config;
+		}
+	}
+
+	if (normalizeVersionSeparators(baseId).startsWith('gpt-')) {
+		const fallbackMatch = indexedConfigs.find(
+			(entry) =>
+				entry.normalizedNoDate === 'gpt-4o' || entry.normalizedNoDate.startsWith('gpt-4o-'),
+		);
+		if (fallbackMatch) {
+			consola.debug(`Using ${fallbackMatch.key} pricing for ${modelId}`);
+			return fallbackMatch.config;
+		}
+	}
+
+	return null;
+};
+
 // 未知モデルの警告を1回だけ表示するためのキャッシュ
 const warnedModels = new Set<string>();
 
 export const loadModelConfigs = async (modelsFile: string): Promise<ModelConfigMap> => {
 	const exists = await fileExists(modelsFile);
 	if (!exists) {
-		consola.warn(`models.json not found at ${modelsFile} (all costs set to 0)`);
+		consola.warn(`Model config not found at ${modelsFile} (all costs set to 0)`);
 		return {};
 	}
 
@@ -87,13 +181,13 @@ export const loadModelConfigs = async (modelsFile: string): Promise<ModelConfigM
 	try {
 		data = await Bun.file(modelsFile).json();
 	} catch (error) {
-		consola.warn(`Failed to parse models.json at ${modelsFile} (all costs set to 0)`);
+		consola.warn(`Failed to parse model config at ${modelsFile} (all costs set to 0)`);
 		consola.debug(error);
 		return {};
 	}
 
 	if (!isRecord(data)) {
-		consola.warn(`Invalid models.json format at ${modelsFile} (all costs set to 0)`);
+		consola.warn(`Invalid model config format at ${modelsFile} (all costs set to 0)`);
 		return {};
 	}
 
@@ -116,6 +210,41 @@ export const loadModelConfigs = async (modelsFile: string): Promise<ModelConfigM
 	return configs;
 };
 
+export const loadModelConfigsFromDir = async (dir: string): Promise<ModelConfigMap> => {
+	const glob = new Bun.Glob('*.json');
+	const filePaths: string[] = [];
+	for await (const filePath of glob.scan({
+		cwd: dir,
+		absolute: true,
+	})) {
+		filePaths.push(filePath);
+	}
+
+	filePaths.sort((a, b) => a.localeCompare(b));
+	const merged: ModelConfigMap = {};
+	for (const filePath of filePaths) {
+		const configs = await loadModelConfigs(filePath);
+		for (const [modelId, config] of Object.entries(configs)) {
+			merged[modelId] = config;
+		}
+	}
+
+	return merged;
+};
+
+export const loadAllModelConfigs = async (modelsPath: string): Promise<ModelConfigMap> => {
+	if (await dirExists(modelsPath)) {
+		return loadModelConfigsFromDir(modelsPath);
+	}
+
+	if (await fileExists(modelsPath)) {
+		return loadModelConfigs(modelsPath);
+	}
+
+	consola.warn(`Model config not found at ${modelsPath} (all costs set to 0)`);
+	return {};
+};
+
 export const calculateUsageCost = (
 	tokens: TokenUsage,
 	modelId: string,
@@ -126,7 +255,7 @@ export const calculateUsageCost = (
 	const outputTokens = normalized.output;
 	const cacheTokens = normalized.cache.read + normalized.cache.write;
 
-	const config = configs[modelId];
+	const config = findMatchingModel(modelId, configs);
 	if (!config) {
 		if (!warnedModels.has(modelId)) {
 			warnedModels.add(modelId);
