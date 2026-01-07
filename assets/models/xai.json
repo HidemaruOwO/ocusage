@@ -1,56 +1,56 @@
 {
-  "grok-4-1-fast-reasoning": {
-    "input_cost_per_million": 0.2,
-    "output_cost_per_million": 0.5,
-    "context_window": 2000000,
-    "description": "Grok 4.1 Fast (Reasoning)"
-  },
-  "grok-4-1-fast-non-reasoning": {
-    "input_cost_per_million": 0.2,
-    "output_cost_per_million": 0.5,
-    "context_window": 2000000,
-    "description": "Grok 4.1 Fast (Non-Reasoning)"
-  },
-  "grok-code-fast-1": {
-    "input_cost_per_million": 0.2,
-    "output_cost_per_million": 1.5,
-    "context_window": 256000,
-    "description": "Grok Code Fast 1"
-  },
-  "grok-4-fast-reasoning": {
-    "input_cost_per_million": 0.2,
-    "output_cost_per_million": 0.5,
-    "context_window": 2000000,
-    "description": "Grok 4 Fast (Reasoning)"
-  },
-  "grok-4-fast-non-reasoning": {
-    "input_cost_per_million": 0.2,
-    "output_cost_per_million": 0.5,
-    "context_window": 2000000,
-    "description": "Grok 4 Fast (Non-Reasoning)"
-  },
-  "grok-4-0709": {
-    "input_cost_per_million": 3.0,
-    "output_cost_per_million": 15.0,
-    "context_window": 256000,
-    "description": "Grok 4 (0709)"
-  },
-  "grok-3-mini": {
-    "input_cost_per_million": 0.3,
-    "output_cost_per_million": 0.5,
-    "context_window": 131072,
-    "description": "Grok 3 Mini"
-  },
-  "grok-3": {
-    "input_cost_per_million": 3.0,
-    "output_cost_per_million": 15.0,
-    "context_window": 131072,
-    "description": "Grok 3"
-  },
-  "grok-2-vision-1212": {
-    "input_cost_per_million": 2.0,
-    "output_cost_per_million": 10.0,
-    "context_window": 32768,
-    "description": "Grok 2 Vision (1212)"
-  }
+	"grok-4-1-fast-reasoning": {
+		"input_cost_per_million": 0.2,
+		"output_cost_per_million": 0.5,
+		"context_window": 2000000,
+		"description": "Grok 4.1 Fast (Reasoning)"
+	},
+	"grok-4-1-fast-non-reasoning": {
+		"input_cost_per_million": 0.2,
+		"output_cost_per_million": 0.5,
+		"context_window": 2000000,
+		"description": "Grok 4.1 Fast (Non-Reasoning)"
+	},
+	"grok-code-fast-1": {
+		"input_cost_per_million": 0.2,
+		"output_cost_per_million": 1.5,
+		"context_window": 256000,
+		"description": "Grok Code Fast 1"
+	},
+	"grok-4-fast-reasoning": {
+		"input_cost_per_million": 0.2,
+		"output_cost_per_million": 0.5,
+		"context_window": 2000000,
+		"description": "Grok 4 Fast (Reasoning)"
+	},
+	"grok-4-fast-non-reasoning": {
+		"input_cost_per_million": 0.2,
+		"output_cost_per_million": 0.5,
+		"context_window": 2000000,
+		"description": "Grok 4 Fast (Non-Reasoning)"
+	},
+	"grok-4-0709": {
+		"input_cost_per_million": 3.0,
+		"output_cost_per_million": 15.0,
+		"context_window": 256000,
+		"description": "Grok 4 (0709)"
+	},
+	"grok-3-mini": {
+		"input_cost_per_million": 0.3,
+		"output_cost_per_million": 0.5,
+		"context_window": 131072,
+		"description": "Grok 3 Mini"
+	},
+	"grok-3": {
+		"input_cost_per_million": 3.0,
+		"output_cost_per_million": 15.0,
+		"context_window": 131072,
+		"description": "Grok 3"
+	},
+	"grok-2-vision-1212": {
+		"input_cost_per_million": 2.0,
+		"output_cost_per_million": 10.0,
+		"context_window": 32768,
+		"description": "Grok 2 Vision (1212)"
+	}
 }
