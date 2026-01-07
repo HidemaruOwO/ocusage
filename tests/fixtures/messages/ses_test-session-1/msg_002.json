@@ -1,0 +1,16 @@
+{
+	"id": "msg_002",
+	"sessionID": "ses_test-session-1",
+	"role": "assistant",
+	"time": { "created": 1704067300000, "completed": 1704067360000 },
+	"modelID": "gpt-4o",
+	"providerID": "github-copilot",
+	"tokens": {
+		"input": 2000,
+		"output": 1200,
+		"reasoning": 0,
+		"cache": { "read": 0, "write": 0 }
+	},
+	"cost": 0,
+	"finish": "stop"
+}

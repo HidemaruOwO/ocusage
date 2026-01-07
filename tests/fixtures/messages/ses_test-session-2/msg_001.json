@@ -1,0 +1,16 @@
+{
+	"id": "msg_001",
+	"sessionID": "ses_test-session-2",
+	"role": "assistant",
+	"time": { "created": 1704153600000, "completed": 1704153660000 },
+	"modelID": "anthropic/claude-opus-4.5",
+	"providerID": "openrouter",
+	"tokens": {
+		"input": 5000,
+		"output": 2500,
+		"reasoning": 0,
+		"cache": { "read": 1000, "write": 500 }
+	},
+	"cost": 0.0709,
+	"finish": "end_turn"
+}

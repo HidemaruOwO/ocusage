@@ -1,0 +1,16 @@
+{
+	"id": "msg_001",
+	"sessionID": "ses_test-session-1",
+	"role": "assistant",
+	"time": { "created": 1704067200000, "completed": 1704067260000 },
+	"modelID": "anthropic/claude-3.5-sonnet",
+	"providerID": "openrouter",
+	"tokens": {
+		"input": 1500,
+		"output": 800,
+		"reasoning": 0,
+		"cache": { "read": 200, "write": 100 }
+	},
+	"cost": 0.0125,
+	"finish": "end_turn"
+}
