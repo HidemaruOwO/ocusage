@@ -34,6 +34,7 @@ ocusage sessions [options]
 | --order | - | dir | desc | ソート順 (asc/desc) |
 
 **Output** (stdout):
+
 ```
 SESSION_ID                         DATE         START     END       DURATION  MODEL              INPUT      OUTPUT     CACHE      COST
 ses_48be92eaeffepmcHE35j3U6N6f    2025-12-31   10:30:00  11:45:30  75.5min   claude-opus-4.5    50000      10000      5000       $0.3150
@@ -41,6 +42,7 @@ ses_abc123def456ghi789jkl012mn    2025-12-30   14:00:00  15:30:00  90.0min   mix
 ```
 
 **Exit Codes**:
+
 - 0: 成功
 - 1: ディレクトリ不在
 
@@ -65,6 +67,7 @@ ocusage session <id> [options]
 | --path | -p | path | auto | メッセージディレクトリ |
 
 **Output** (stdout):
+
 ```
 Session: ses_48be92eaeffepmcHE35j3U6N6f
 Date: 2025-12-31
@@ -86,6 +89,7 @@ Summary:
 ```
 
 **Exit Codes**:
+
 - 0: 成功
 - 1: セッション不在
 
@@ -107,6 +111,7 @@ ocusage models [options]
 | --path | -p | path | auto | メッセージディレクトリ |
 
 **Output** (stdout):
+
 ```
 MODEL                INPUT         OUTPUT        CACHE         COST
 claude-opus-4.5      1,500,000     300,000       50,000        $15.0000
@@ -117,6 +122,7 @@ TOTAL                2,200,000     450,000       80,000        $18.7000
 ```
 
 **Exit Codes**:
+
 - 0: 成功
 - 1: ディレクトリ不在
 
@@ -139,6 +145,7 @@ ocusage daily [options]
 | --path | -p | path | auto | メッセージディレクトリ |
 
 **Output** (stdout):
+
 ```
 DATE         SESSIONS  INPUT         OUTPUT        CACHE         COST
 2025-12-31   5         500,000       100,000       20,000        $5.0000
@@ -149,6 +156,7 @@ TOTAL        16        1,600,000     360,000       75,000        $16.5000
 ```
 
 **Exit Codes**:
+
 - 0: 成功
 - 1: ディレクトリ不在
 
@@ -165,6 +173,7 @@ ocusage weekly [options]
 **Options**: dailyと同じ
 
 **Output** (stdout):
+
 ```
 WEEK         SESSIONS  INPUT         OUTPUT        CACHE         COST
 2025-W52     16        1,600,000     360,000       75,000        $16.5000
@@ -186,6 +195,7 @@ ocusage monthly [options]
 **Options**: dailyと同じ
 
 **Output** (stdout):
+
 ```
 MONTH      SESSIONS  INPUT         OUTPUT        CACHE         COST
 2025-12    50        5,000,000     1,000,000     200,000       $50.0000
@@ -215,6 +225,7 @@ ocusage export [options]
 | --path | -p | path | auto | メッセージディレクトリ |
 
 **Output (CSV)**:
+
 ```csv
 session_id,date,start_time,end_time,duration_minutes,model,input_tokens,output_tokens,cache_tokens,total_cost
 ses_48be92eaeffepmcHE35j3U6N6f,2025-12-31,10:30:00,11:45:30,75.5,claude-opus-4.5,50000,10000,5000,0.3150
@@ -223,6 +234,7 @@ ses_48be92eaeffepmcHE35j3U6N6f,2025-12-31,10:30:00,11:45:30,75.5,claude-opus-4.5
 **Output (JSON)**: See spec.md for full schema
 
 **Exit Codes**:
+
 - 0: 成功
 - 1: ディレクトリ不在
 - 2: 不正なフォーマット指定
@@ -243,6 +255,7 @@ ocusage live [options]
 | --path | -p | path | auto | メッセージディレクトリ |
 
 **Output** (stdout, real-time):
+
 ```
 Watching: ~/.local/share/opencode/storage/message
 Press Ctrl+C to stop
@@ -258,6 +271,7 @@ Summary on exit:
 ```
 
 **Exit Codes**:
+
 - 0: 正常終了 (Ctrl+C)
 - 1: ディレクトリ不在
 
@@ -267,24 +281,24 @@ Summary on exit:
 
 全コマンドで利用可能なオプション:
 
-| Option | Short | Type | Default | Description |
-|--------|-------|------|---------|-------------|
-| --help | -h | - | - | ヘルプ表示 |
-| --version | -v | - | - | バージョン表示 |
-| --config | -c | path | auto | 設定ファイルパス |
+| Option    | Short | Type | Default | Description      |
+| --------- | ----- | ---- | ------- | ---------------- |
+| --help    | -h    | -    | -       | ヘルプ表示       |
+| --version | -v    | -    | -       | バージョン表示   |
+| --config  | -c    | path | auto    | 設定ファイルパス |
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| OCUSAGE_MESSAGES_DIR | メッセージディレクトリ | ~/.local/share/opencode/storage/message |
-| OCUSAGE_MODELS_FILE | models.jsonパス | ~/.config/ocusage/models.json |
-| OCUSAGE_LOG_LEVEL | ログレベル (debug/info/warn/error) | warn |
+| Variable             | Description                        | Default                                 |
+| -------------------- | ---------------------------------- | --------------------------------------- |
+| OCUSAGE_MESSAGES_DIR | メッセージディレクトリ             | ~/.local/share/opencode/storage/message |
+| OCUSAGE_MODELS_FILE  | models.jsonパス                    | ~/.config/ocusage/models.json           |
+| OCUSAGE_LOG_LEVEL    | ログレベル (debug/info/warn/error) | warn                                    |
 
 ## Exit Codes Summary
 
-| Code | Meaning |
-|------|---------|
-| 0 | 成功 |
-| 1 | 一般エラー（ディレクトリ不在、セッション不在など） |
-| 2 | 引数/設定エラー（不正なフラグ、日付形式エラーなど） |
+| Code | Meaning                                             |
+| ---- | --------------------------------------------------- |
+| 0    | 成功                                                |
+| 1    | 一般エラー（ディレクトリ不在、セッション不在など）  |
+| 2    | 引数/設定エラー（不正なフラグ、日付形式エラーなど） |
