@@ -22,7 +22,9 @@ git clone https://github.com/HidemaruOwO/ocusage.git
 cd ocusage
 
 bun install
-bun link
+bun build src/index.ts --compile --outfile=ocusage --production
+
+mv ocusage /usr/local/bin
 ```
 
 ## Usage
