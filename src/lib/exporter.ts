@@ -96,6 +96,21 @@ export type PeriodExportData = {
 	costUSD: number;
 };
 
+export type ModelExportData = {
+	model: string;
+	inputTokens: number;
+	outputTokens: number;
+	cacheTokens: number;
+	costUSD: number;
+};
+
+export const formatModelsAsJson = (
+	models: ModelExportData[],
+	totals: { inputTokens: number; outputTokens: number; cacheTokens: number; costUSD: number },
+): string => {
+	return JSON.stringify({ models, totals }, null, 2);
+};
+
 type PeriodTotals = {
 	sessions: number;
 	inputTokens: number;

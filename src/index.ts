@@ -1,5 +1,6 @@
 import { cli, define } from 'gunshi';
 import dailyCommand from '@/commands/daily';
+import modelsCommand from '@/commands/models';
 import monthlyCommand from '@/commands/monthly';
 import sessionsCommand from '@/commands/sessions';
 import weeklyCommand from '@/commands/weekly';
@@ -30,6 +31,7 @@ await cli(process.argv.slice(2), main, {
 	version: '0.1.0',
 	subCommands: {
 		sessions: sessionsCommand,
+		models: modelsCommand,
 		daily: dailyCommand,
 		weekly: weeklyCommand,
 		monthly: monthlyCommand,
