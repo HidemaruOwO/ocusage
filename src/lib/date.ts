@@ -1,11 +1,34 @@
 const pad2 = (value: number): string => value.toString().padStart(2, "0");
 
+const MONTH_SHORT_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 export const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp);
   const year = date.getFullYear();
   const month = pad2(date.getMonth() + 1);
   const day = pad2(date.getDate());
   return `${year}-${month}-${day}`;
+};
+
+export const formatDateHuman = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const month = MONTH_SHORT_NAMES[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
+  return `${month} ${day}, ${year}`;
 };
 
 export const formatTime = (timestamp: number): string => {

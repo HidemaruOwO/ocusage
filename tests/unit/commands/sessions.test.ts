@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import type { Session } from "../../../src/models/session";
-import { filterSessions, sortSessions } from "../../../src/commands/sessions";
+import {
+  filterSessions,
+  resolveOutputFormat,
+  sortSessions,
+} from "../../../src/commands/sessions";
 
 const createSession = (overrides: Partial<Session>): Session => {
   return {
@@ -109,5 +113,17 @@ describe("sessions command helpers", () => {
 
     const sorted = sortSessions([sessionA, sessionB], "tokens", "asc");
     expect(sorted.map((session) => session.id)).toEqual(["ses_b", "ses_a"]);
+  });
+
+  test("resolveOutputFormat selects json when --json is set", () => {
+    expect(resolveOutputFormat({ json: true })).toBe("json");
+  });
+
+  test("resolveOutputFormat selects csv when --csv is set", () => {
+    expect(resolveOutputFormat({ csv: true })).toBe("csv");
+  });
+
+  test("resolveOutputFormat returns null when both --json and --csv are set", () => {
+    expect(resolveOutputFormat({ json: true, csv: true })).toBeNull();
   });
 });

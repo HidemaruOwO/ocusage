@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   formatDate,
+  formatDateHuman,
   formatTime,
   getDayStart,
   getMonthStart,
@@ -13,6 +14,13 @@ describe("date utilities", () => {
   test("formatDate uses local date parts", () => {
     const date = new Date(2025, 0, 2, 3, 4, 5);
     expect(formatDate(date.getTime())).toBe("2025-01-02");
+  });
+
+  test("formatDateHuman uses short month names", () => {
+    const jan = new Date(2026, 0, 1, 8, 0, 0);
+    const dec = new Date(2025, 11, 31, 8, 0, 0);
+    expect(formatDateHuman(jan.getTime())).toBe("Jan 1, 2026");
+    expect(formatDateHuman(dec.getTime())).toBe("Dec 31, 2025");
   });
 
   test("formatTime uses local time parts", () => {
