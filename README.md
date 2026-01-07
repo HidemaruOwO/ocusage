@@ -1,96 +1,114 @@
-# MicroRepository 📚
+# ocusage
 
-A template that gathers the minimal structure of my repository.
+OpenCode usage tracker - Track and analyze token usage from OpenCode sessions.
 
-## 🚀 Features
+## Features
 
-- Modern `README.md`
-- Multiple licenses: `Apache 2.0` and `SUSHI-WARE`
-- Modified `clinrules`
+- Session list with filtering and sorting
+- Usage aggregation by model
+- Daily / Weekly / Monthly token usage reports
+- Cost calculation (supports free models, subscription usage, GPT, Claude, and more) (not fully covered)
+- Export to CSV / JSON formats
 
-<!-- ## 🛠 Installation -->
+## Installation
 
-<!-- ```bash -->
-<!-- brew install micro-repository -->
-<!-- ``` -->
-
-<!-- ### 🏗 Build from Source -->
-
-<!-- ```sh -->
-<!-- git clone https://github.com/HidemaruOwO/MicroRepository.git -->
-<!-- cd MicroRepository -->
-
-<!-- make -j8 -->
-
-<!-- install -Dm0755 -t "/usr/local/bin/" "dist/builded-binary" -->
-<!-- ``` -->
-
-<!-- - Arch Linux -->
-
-<!-- ```sh -->
-<!-- git clone https://github.com/HidemaruOwO/MicroRepository.git -->
-<!-- cd MicroRepository -->
-
-<!-- makepkg -si -->
-<!-- ``` -->
-
-## 🎯 Usage
-
-A guide to using this repository template:
-
-1. Click `Use this template` > `Create a new repository` in the top right corner.
-2. Clone the created repository, rename README.example.md to README.md, edit it with your preferred editor, and migrate.
+> [!NOTE]
+> This package is currently under development and will be published to npm when it is ready.
 
 ```bash
-mv README.example.md README.md
+git clone https://github.com/HidemaruOwO/ocusage.git
+cd ocusage
 
-# For Linux users
-sed -i 's;HidemaruOwO/MyRepository;USERNAME/REPONAME;g' README.md
-
-# For macOS users
-sed -i '' 's;HidemaruOwO/MyRepository;USERNAME/REPONAME;g' README.md
+bun install
+bun link
 ```
 
-3. Edit credits in LICENSE and licenses/SUSHI-WARE.txt.
+## Usage
 
-> [!IMPORTANT]
-> If you don't change the credit in the license file, I will usually own the rights to your software. (LoL)
+```bash
+# Show daily usage
+ocusage daily
 
-### ✏️ About text editors
+# Show weekly usage
+ocusage weekly
 
-This repository is designed to be edited with any text editor, but I recommend using [Neovim](https://neovim.io/) for handwritten, [Roo Code](https://github.com/RooCodeInc/Roo-Code) for pair-programming with AI, and [OpenCode](https://opencode.ai/) for agentic-coding.
+# Show monthly usage
+ocusage monthly
 
-#### 💥 Alternatives
+# Show usage by model
+ocusage models
 
-| Text Editor          | Alternatives                               |
-| -------------------- | ------------------------------------------ |
-| Neovim               | VSCode, Sublime Text, Atom, Emacs, etc.    |
-| Roo Code (.roorules) | GitHub Copilot, Cursor, Windsurf, etc.     |
-| OpenCode             | Claude Code, Gemini CLI, OpenAI Codex etc. |
+# List all sessions
+ocusage sessions
+```
 
-#### 📝 Usage Scenarios
+### Common Options
 
-| Project Type | Phase                               | Neovim                                                                         | Roo                                                                              | OpenCode                                                                    |
-| ------------ | ----------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| New          | Requirements Definition & Design    | • Create specifications and design documents manually to deepen understanding  |                                                                                  |                                                                             |
-| New          | Module-Level Development            |                                                                                | • Receive AI suggestions per function and implement while reviewing explanations |                                                                             |
-| New          | Full Skeleton Generation            |                                                                                |                                                                                  | • Generate directory structures and boilerplate code in bulk for fast setup |
-| Existing     | Bug Investigation & Refactoring     | • Read code deeply and make manual fixes for better understanding and learning |                                                                                  |                                                                             |
-| Existing     | Small Feature Additions & Tests     |                                                                                | • Interactively generate test code or small functions                            |                                                                             |
-| Existing     | Large-Scale Changes & Documentation |                                                                                |                                                                                  | • Perform large-scale refactoring or documentation updates in bulk          |
+| Option          | Description                    |
+| --------------- | ------------------------------ |
+| `--json`        | Output as JSON                 |
+| `--csv`         | Output as CSV                  |
+| `--from`, `-f`  | Start date filter (YYYY-MM-DD) |
+| `--to`, `-t`    | End date filter (YYYY-MM-DD)   |
+| `--model`, `-m` | Filter by model name           |
+| `--path`, `-p`  | Custom messages directory      |
 
-## 🌍 For contributer
+### Examples
 
-By contributing to this project, you agree to the following terms:
+```bash
+# Show sessions from the last week
+ocusage sessions --from 2025-01-01 --to 2025-01-07
 
-1. **You grant a license**: You grant the project owner a perpetual, worldwide, non-exclusive, royalty-free, irrevocable license to use, modify, distribute, and sublicense your contributions under the **Apache License 2.0**.
-2. **You retain ownership**: You still own the copyright of your contribution, but you waive any claims against the project related to your contribution.
-3. **No additional patent rights**: You **do not** grant additional patent rights beyond what is covered by Apache 2.0.
-4. **Your contributions are original**: You confirm that your contributions do not violate any third-party rights.
+# Export daily usage as CSV
+ocusage daily --csv > daily-usage.csv
 
-By submitting a pull request, you agree to these terms.
+# Show usage for a specific model
+ocusage sessions --model claude-sonnet-4
 
-## 📜 License
+# Output as JSON for scripting
+ocusage models --json | jq '.totals.costUSD'
+```
+
+## Configuration
+
+### Environment Variables
+
+| Variable               | Description                        | Default                                   |
+| ---------------------- | ---------------------------------- | ----------------------------------------- |
+| `OCUSAGE_MESSAGES_DIR` | OpenCode messages directory        | `~/.local/share/opencode/storage/message` |
+| `OCUSAGE_MODELS_FILE`  | Custom model pricing configuration | (uses built-in defaults)                  |
+| `OCUSAGE_LOG_LEVEL`    | Log level (debug/info/warn/error)  | `warn`                                    |
+
+### Supported Models
+
+ocusage includes built-in pricing for major AI models:
+
+- **Anthropic**: Claude Opus 4.5, Sonnet 4.5, Haiku 4.5, and more
+- **OpenAI**: GPT-5.x, GPT-4.x, o1, o3, o4-mini, and more
+- **Google**: Gemini 3, 2.5, 2.0 series
+- **xAI**: Grok 4.x, 3.x series
+- **OpenRouter**: anything
+
+## Development
+
+```bash
+# Run in development
+bun run dev
+
+# Run tests
+bun test
+
+# Lint
+bun run lint
+
+# Format
+bun run format
+
+# Build
+bun run build
+```
+
+## License
 
 <div align="left" style="flex: inline" >
 <a href="https://www.apache.org/licenses/LICENSE-2.0" >
@@ -105,8 +123,18 @@ This project is dual-licensed under [Apache License 2.0](https://www.apache.org/
 
 A reference to the latest license should be used, even if the attached license is outdated of major versions.
 
-## 🤝 Reference
+## Reference
 
 This repository was created using the [MicroRepository](https://github.com/HidemaruOwO/MicroRepository) template.
 
 - [HidemaruOwO/MicroRepository](https://github.com/HidemaruOwO/MicroRepository)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [HidemaruOwO](https://github.com/HidemaruOwO)**
+
+If ocusage helps improve your QOL of vibe coding, please ⭐ this repository!
+
+</div>
