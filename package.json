@@ -1,26 +1,26 @@
 {
-	"name": "ocusage",
-	"version": "0.1.0",
-	"type": "module",
-	"bin": {
-		"ocusage": "./src/index.ts"
-	},
-	"scripts": {
-		"dev": "bun run src/index.ts",
-		"build": "bun build src/index.ts --outdir dist --target bun",
-		"test": "bun test",
-		"lint": "bun x @biomejs/biome lint .",
-		"format": "bun x @biomejs/biome format --write .",
-		"check": "bun x @biomejs/biome check ."
-	},
-	"dependencies": {
-		"consola": "^3.4.2",
-		"gunshi": "^0.27.5"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.3.10",
-		"@gunshi/docs": "^0.27.5",
-		"@types/bun": "latest",
-		"typescript": "^5.9.3"
-	}
+  "name": "ocusage",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "ocusage": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "test": "bun test",
+    "lint": "bun x @biomejs/biome lint .",
+    "format": "bun x @biomejs/biome format --write .",
+    "check": "bun x @biomejs/biome check ."
+  },
+  "dependencies": {
+    "consola": "^3.4.2",
+    "gunshi": "^0.27.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.10",
+    "@gunshi/docs": "^0.27.5",
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  }
 }
