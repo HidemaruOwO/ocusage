@@ -1,4 +1,5 @@
 import { define } from 'gunshi';
+import { renderHeader } from 'gunshi/renderer';
 import { consola } from 'consola';
 import { resolveMessagesDir, resolveModelsFile } from '@/services/config';
 import { loadAllModelConfigs } from '@/services/cost';
@@ -121,6 +122,9 @@ export const resolveOutputFormat = (options: OutputFormatOptions): OutputFormat 
 const sessionsCommand = define({
 	name: 'sessions',
 	description: 'List all sessions',
+	rendering: {
+		header: null,
+	},
 	args: {
 		from: {
 			type: 'string',
@@ -172,6 +176,14 @@ const sessionsCommand = define({
 			consola.error('Cannot use --json and --csv together');
 			Bun.exit(2);
 			return;
+		}
+
+		if (outputFormat === 'table') {
+			const header = await renderHeader(ctx);
+			if (header) {
+				console.log(header);
+				console.log('');
+			}
 		}
 
 		const isSilent = outputFormat === 'json' || outputFormat === 'csv';
