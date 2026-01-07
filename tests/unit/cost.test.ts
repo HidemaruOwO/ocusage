@@ -7,9 +7,11 @@ import type { ModelConfigMap } from '../../src/models/model';
 import {
 	calculateMessageCost,
 	calculateUsageCost,
+	getUnknownModels,
 	loadAllModelConfigs,
 	loadModelConfigs,
 	loadModelConfigsFromDir,
+	resetUnknownModels,
 } from '../../src/services/cost';
 
 const createTempDir = async (): Promise<string> => {
@@ -149,6 +151,27 @@ describe('cost calculator', () => {
 
 		const usage = calculateUsageCost(tokens, 'gpt-5.2-high', configs);
 		expect(usage.inputCost).toBeCloseTo(7, 6);
+	});
+
+	test('calculateUsageCost tracks unknown models', () => {
+		resetUnknownModels();
+		const tokens: TokenUsage = {
+			input: 0,
+			output: 0,
+			reasoning: 0,
+			cache: {
+				read: 0,
+				write: 0,
+			},
+		};
+		const configs: ModelConfigMap = {};
+
+		calculateUsageCost(tokens, 'unknown-model', configs);
+		calculateUsageCost(tokens, 'unknown-model', configs);
+		calculateUsageCost(tokens, 'other-unknown', configs);
+
+		expect(getUnknownModels()).toEqual(['unknown-model', 'other-unknown']);
+		resetUnknownModels();
 	});
 
 	test('calculateMessageCost returns empty usage without tokens', () => {

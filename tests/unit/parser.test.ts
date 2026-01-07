@@ -2,8 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { isValidMessage, parseMessageFile, scanMessages } from '../../src/services/parser';
 import type { Message } from '../../src/models/message';
+import { isValidMessage, parseMessageFile, scanMessages } from '../../src/services/parser';
 
 const createTempDir = async (): Promise<string> => {
 	return mkdtemp(join(tmpdir(), 'ocusage-parser-'));

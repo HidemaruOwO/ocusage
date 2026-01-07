@@ -87,12 +87,27 @@ describe('aggregator', () => {
 		expect(modelNames).toEqual(['model-a', 'model-b']);
 	});
 
-	test('buildSession falls back to unknown model when missing', () => {
-		const messages = [createMessage({ modelID: '', tokens: undefined })];
+	test('buildSession skips model aggregation when modelID is missing', () => {
+		const messages = [
+			createMessage({
+				modelID: '',
+				tokens: {
+					input: 250,
+					output: 100,
+					reasoning: 0,
+					cache: {
+						read: 0,
+						write: 0,
+					},
+				},
+			}),
+		];
 
-		const session = buildSession(messages, configs);
-		const modelUsage = session.models.unknown;
-		expect(modelUsage).toBeDefined();
+		const session = buildSession(messages, configs, { silent: true });
+		expect(session.models.unknown).toBeUndefined();
+		expect(Object.keys(session.models)).toHaveLength(0);
+		expect(session.usage.inputTokens).toBe(250);
+		expect(session.usage.outputTokens).toBe(100);
 	});
 
 	test('aggregateByModel sums usage by session model', () => {
