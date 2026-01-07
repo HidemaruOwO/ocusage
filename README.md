@@ -2,6 +2,8 @@
 
 OpenCode usage tracker - Track and analyze token usage from OpenCode sessions.
 
+![intro](/docs/intro.png)
+
 ## Features
 
 - Session list with filtering and sorting
