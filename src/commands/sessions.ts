@@ -1,7 +1,7 @@
 import { define } from 'gunshi';
 import { consola } from 'consola';
 import { resolveMessagesDir, resolveModelsFile } from '@/services/config';
-import { loadModelConfigs } from '@/services/cost';
+import { loadAllModelConfigs } from '@/services/cost';
 import { aggregateSessions } from '@/services/aggregator';
 import { dirExists } from '@/lib/fs';
 import { formatDate, formatTime, parseDate } from '@/lib/date';
@@ -113,7 +113,7 @@ const sessionsCommand = define({
 	},
 	run: async (ctx) => {
 		const messagesDir = resolveMessagesDir(ctx.values.path);
-		const modelsFile = resolveModelsFile();
+		const modelsPath = resolveModelsFile();
 
 		const exists = await dirExists(messagesDir);
 		if (!exists) {
@@ -158,7 +158,7 @@ const sessionsCommand = define({
 			return;
 		}
 
-		const configs = await loadModelConfigs(modelsFile);
+		const configs = await loadAllModelConfigs(modelsPath);
 		const sessions = await aggregateSessions(messagesDir, configs);
 
 		const filtered = filterSessions(sessions, {
