@@ -86,3 +86,91 @@ export const formatSessionsAsJson = (sessions: SessionExportData[]): string => {
 
 	return JSON.stringify(payload, null, 2);
 };
+
+export type PeriodExportData = {
+	period: string;
+	sessions: number;
+	inputTokens: number;
+	outputTokens: number;
+	cacheTokens: number;
+	costUSD: number;
+};
+
+type PeriodTotals = {
+	sessions: number;
+	inputTokens: number;
+	outputTokens: number;
+	cacheTokens: number;
+	costUSD: number;
+};
+
+type PeriodKey = 'daily' | 'weekly' | 'monthly';
+
+type PeriodLabelKey = 'date' | 'week' | 'month';
+
+type PeriodJsonRow = {
+	sessions: number;
+	inputTokens: number;
+	outputTokens: number;
+	cacheTokens: number;
+	costUSD: number;
+} & Partial<Record<PeriodLabelKey, string>>;
+
+export type PeriodJsonOutput = {
+	daily?: PeriodJsonRow[];
+	weekly?: PeriodJsonRow[];
+	monthly?: PeriodJsonRow[];
+	totals: PeriodTotals;
+};
+
+const PERIOD_LABELS: Record<PeriodKey, PeriodLabelKey> = {
+	daily: 'date',
+	weekly: 'week',
+	monthly: 'month',
+};
+
+const sumPeriodTotals = (periods: PeriodExportData[]): PeriodTotals => {
+	return periods.reduce(
+		(acc, period) => {
+			acc.sessions += period.sessions;
+			acc.inputTokens += period.inputTokens;
+			acc.outputTokens += period.outputTokens;
+			acc.cacheTokens += period.cacheTokens;
+			acc.costUSD += period.costUSD;
+			return acc;
+		},
+		{
+			sessions: 0,
+			inputTokens: 0,
+			outputTokens: 0,
+			cacheTokens: 0,
+			costUSD: 0,
+		},
+	);
+};
+
+export const formatPeriodAsJson = (periods: PeriodExportData[], periodKey: PeriodKey): string => {
+	const totals = sumPeriodTotals(periods);
+	const labelKey = PERIOD_LABELS[periodKey];
+
+	const rows = periods.map((period) => {
+		const row: PeriodJsonRow = {
+			[labelKey]: period.period,
+			sessions: period.sessions,
+			inputTokens: period.inputTokens,
+			outputTokens: period.outputTokens,
+			cacheTokens: period.cacheTokens,
+			costUSD: period.costUSD,
+		};
+
+		return row;
+	});
+
+	const payload: PeriodJsonOutput = {
+		totals,
+	};
+
+	payload[periodKey] = rows;
+
+	return JSON.stringify(payload, null, 2);
+};
