@@ -3,9 +3,14 @@ import { createEmptyUsageSummary, mergeUsageSummaries } from "@/models";
 import { calculateMessageCost } from "@/services/cost";
 import { scanMessages } from "@/services/parser";
 
+type CostOptions = {
+  silent?: boolean;
+};
+
 export const buildSession = (
   messages: Message[],
   configs: ModelConfigMap,
+  options?: CostOptions,
 ): Session => {
   if (messages.length === 0) {
     return {
@@ -30,7 +35,10 @@ export const buildSession = (
     if (created > endTime) endTime = created;
 
     models.add(message.modelID);
-    usage = mergeUsageSummaries(usage, calculateMessageCost(message, configs));
+    usage = mergeUsageSummaries(
+      usage,
+      calculateMessageCost(message, configs, options),
+    );
   }
 
   const model = models.size === 1 ? Array.from(models)[0] : "mixed";
@@ -48,6 +56,7 @@ export const buildSession = (
 export const aggregateSessions = async (
   messagesDir: string,
   configs: ModelConfigMap,
+  options?: CostOptions,
 ): Promise<Session[]> => {
   const sessionMap = new Map<string, Message[]>();
 
@@ -62,7 +71,7 @@ export const aggregateSessions = async (
 
   const sessions: Session[] = [];
   for (const messages of sessionMap.values()) {
-    sessions.push(buildSession(messages, configs));
+    sessions.push(buildSession(messages, configs, options));
   }
 
   return sessions;
