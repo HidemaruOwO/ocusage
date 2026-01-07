@@ -1,7 +1,10 @@
 import { consola } from 'consola';
+import { loadCache, saveCache } from '@/lib/cache';
 import { dirExists, fileExists } from '@/lib/fs';
 import type { Message, ModelConfig, ModelConfigMap, TokenUsage, UsageSummary } from '@/models';
 import { createEmptyUsageSummary, DEFAULT_MODELS, getCacheCostPerMillion } from '@/models';
+import { resolveOpenRouterApiKey } from '@/services/config';
+import { fetchOpenRouterModels } from '@/services/openrouter';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -259,19 +262,38 @@ export const loadAllModelConfigs = async (
 	modelsPath: string,
 	options?: LoadModelConfigsOptions,
 ): Promise<ModelConfigMap> => {
-	if (!modelsPath) {
-		return DEFAULT_MODELS;
+	let configs: ModelConfigMap = {};
+
+	if (modelsPath) {
+		if (await dirExists(modelsPath)) {
+			configs = await loadModelConfigsFromDir(modelsPath, options);
+		} else if (await fileExists(modelsPath)) {
+			configs = await loadModelConfigs(modelsPath, options);
+		}
 	}
 
-	if (await dirExists(modelsPath)) {
-		return loadModelConfigsFromDir(modelsPath, options);
+	const apiKey = resolveOpenRouterApiKey();
+	if (apiKey) {
+		const cached = await loadCache();
+		if (cached) {
+			configs = { ...cached, ...configs };
+		} else {
+			try {
+				const openRouterModels = await fetchOpenRouterModels(apiKey);
+				try {
+					await saveCache(openRouterModels);
+				} catch (error) {
+					logDebug(error, options);
+				}
+				configs = { ...openRouterModels, ...configs };
+			} catch (error) {
+				logWarning('Failed to fetch OpenRouter models, using defaults', options);
+				logDebug(error, options);
+			}
+		}
 	}
 
-	if (await fileExists(modelsPath)) {
-		return loadModelConfigs(modelsPath, options);
-	}
-
-	return DEFAULT_MODELS;
+	return { ...DEFAULT_MODELS, ...configs };
 };
 
 export const calculateUsageCost = (
@@ -319,6 +341,19 @@ export const calculateMessageCost = (
 	configs: ModelConfigMap,
 	options?: LoadModelConfigsOptions,
 ): UsageSummary => {
+	if (message.cost > 0) {
+		const tokens = normalizeTokens(message.tokens);
+		return {
+			inputTokens: tokens.input,
+			outputTokens: tokens.output,
+			cacheTokens: tokens.cache.read + tokens.cache.write,
+			inputCost: 0,
+			outputCost: 0,
+			cacheCost: 0,
+			totalCost: message.cost,
+		};
+	}
+
 	if (!message.tokens) return createEmptyUsageSummary();
 
 	return calculateUsageCost(normalizeTokens(message.tokens), message.modelID, configs, options);

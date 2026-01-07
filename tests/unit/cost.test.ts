@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -27,6 +27,21 @@ const baseConfig: ModelConfigMap = {
 		description: 'Model A',
 	},
 };
+
+const originalOpenRouterKey = Bun.env.OPENROUTER_API_KEY;
+
+beforeEach(() => {
+	Bun.env.OPENROUTER_API_KEY = '';
+});
+
+afterAll(() => {
+	if (originalOpenRouterKey === undefined) {
+		delete Bun.env.OPENROUTER_API_KEY;
+		return;
+	}
+
+	Bun.env.OPENROUTER_API_KEY = originalOpenRouterKey;
+});
 
 describe('cost calculator', () => {
 	test('calculateUsageCost computes costs with cache override', () => {
@@ -190,6 +205,61 @@ describe('cost calculator', () => {
 		const usage = calculateMessageCost(message, baseConfig);
 		expect(usage.totalCost).toBe(0);
 		expect(usage.inputTokens).toBe(0);
+	});
+
+	describe('calculateMessageCost with recorded cost', () => {
+		test('uses message.cost when > 0 (OpenRouter)', () => {
+			const message: Message = {
+				id: 'msg_001',
+				sessionID: 'ses_001',
+				role: 'assistant',
+				time: { created: 1_704_067_200_000 },
+				modelID: 'anthropic/claude-3.5-sonnet',
+				providerID: 'openrouter',
+				tokens: {
+					input: 1500,
+					output: 800,
+					reasoning: 0,
+					cache: { read: 200, write: 100 },
+				},
+				cost: 0.0125,
+			};
+
+			const result = calculateMessageCost(message, {}, { silent: true });
+			expect(result.totalCost).toBe(0.0125);
+			expect(result.inputTokens).toBe(1500);
+			expect(result.outputTokens).toBe(800);
+		});
+
+		test('calculates cost from tokens when message.cost is 0', () => {
+			const message: Message = {
+				id: 'msg_002',
+				sessionID: 'ses_001',
+				role: 'assistant',
+				time: { created: 1_704_067_200_000 },
+				modelID: 'gpt-4o',
+				providerID: 'github-copilot',
+				tokens: {
+					input: 2000,
+					output: 1200,
+					reasoning: 0,
+					cache: { read: 0, write: 0 },
+				},
+				cost: 0,
+			};
+
+			const configs: ModelConfigMap = {
+				'gpt-4o': {
+					inputCostPerMillion: 2.5,
+					outputCostPerMillion: 10.0,
+					contextWindow: 128000,
+					description: 'GPT-4o',
+				},
+			};
+
+			const result = calculateMessageCost(message, configs, { silent: true });
+			expect(result.totalCost).toBeCloseTo(0.017, 5);
+		});
 	});
 
 	test('loadModelConfigs returns empty config when missing file', async () => {
