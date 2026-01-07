@@ -1,5 +1,8 @@
 import { cli, define } from 'gunshi';
+import dailyCommand from '@/commands/daily';
+import monthlyCommand from '@/commands/monthly';
 import sessionsCommand from '@/commands/sessions';
+import weeklyCommand from '@/commands/weekly';
 
 const main = define({
 	name: 'ocusage',
@@ -27,5 +30,8 @@ await cli(process.argv.slice(2), main, {
 	version: '0.1.0',
 	subCommands: {
 		sessions: sessionsCommand,
+		daily: dailyCommand,
+		weekly: weeklyCommand,
+		monthly: monthlyCommand,
 	},
 });

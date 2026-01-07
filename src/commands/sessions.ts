@@ -6,6 +6,7 @@ import type { SessionExportData } from '@/lib/exporter';
 import { formatAsCsv, formatSessionsAsJson, getModelNamesForCsv } from '@/lib/exporter';
 import { formatCost, formatDuration, formatTable, formatTokens } from '@/lib/formatter';
 import { dirExists } from '@/lib/fs';
+import { printUnknownModelsSummary } from '@/lib/unknown-models';
 import type { Session } from '@/models';
 import { getSessionDurationMinutes, getSessionModelDisplay } from '@/models';
 import { aggregateSessions } from '@/services/aggregator';
@@ -165,6 +166,10 @@ const sessionsCommand = define({
 		csv: {
 			type: 'boolean',
 			description: 'Output as CSV',
+		},
+		'show-unknown': {
+			type: 'boolean',
+			description: 'Show unknown model names',
 		},
 	},
 	run: async (ctx) => {
@@ -328,6 +333,9 @@ const sessionsCommand = define({
 
 		const table = formatTable(TABLE_HEADERS, tableRows);
 		consola.log(table);
+		if (!isSilent) {
+			printUnknownModelsSummary(ctx.values['show-unknown'] ?? false);
+		}
 	},
 });
 
