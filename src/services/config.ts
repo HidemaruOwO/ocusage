@@ -58,3 +58,9 @@ export const loadAppConfig = (overrides: Partial<AppConfig> = {}): AppConfig => 
 		logLevel,
 	};
 };
+
+export const resolveOpenRouterApiKey = (): string | null => {
+	const value = Bun.env.OPENROUTER_API_KEY;
+	if (!isNonEmpty(value)) return null;
+	return value.trim();
+};
