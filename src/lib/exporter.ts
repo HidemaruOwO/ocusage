@@ -29,18 +29,28 @@ export const formatAsCsv = (headers: string[], rows: (string | number)[][]): str
 	return lines.join('\n');
 };
 
+export type ModelUsageExport = {
+	inputTokens: number;
+	outputTokens: number;
+	cacheTokens: number;
+	costUSD: number;
+};
+
 export type SessionExportData = {
 	sessionId: string;
 	date: string;
 	startTime: string;
 	endTime: string;
 	durationMinutes: number;
-	model: string;
+	models: Record<string, ModelUsageExport>;
 	inputTokens: number;
 	outputTokens: number;
 	cacheTokens: number;
 	costUSD: number;
 };
+
+export const getModelNamesForCsv = (models: Record<string, ModelUsageExport>): string =>
+	Object.keys(models).join(',');
 
 export type SessionsJsonOutput = {
 	sessions: SessionExportData[];

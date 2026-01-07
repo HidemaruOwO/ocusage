@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { formatAsCsv, formatSessionsAsJson } from '../../src/lib/exporter';
 import type { SessionExportData, SessionsJsonOutput } from '../../src/lib/exporter';
+import { formatAsCsv, formatSessionsAsJson, getModelNamesForCsv } from '../../src/lib/exporter';
 
 describe('exporter utilities', () => {
 	test('formatAsCsv outputs basic CSV', () => {
@@ -21,6 +21,25 @@ describe('exporter utilities', () => {
 		expect(formatAsCsv([], [])).toBe('');
 	});
 
+	test('getModelNamesForCsv joins model keys', () => {
+		const models = {
+			'gpt-4': {
+				inputTokens: 1,
+				outputTokens: 2,
+				cacheTokens: 0,
+				costUSD: 0.01,
+			},
+			'gpt-4o': {
+				inputTokens: 3,
+				outputTokens: 4,
+				cacheTokens: 1,
+				costUSD: 0.02,
+			},
+		};
+
+		expect(getModelNamesForCsv(models)).toBe('gpt-4,gpt-4o');
+	});
+
 	test('formatSessionsAsJson outputs sessions and totals', () => {
 		const sessions: SessionExportData[] = [
 			{
@@ -29,7 +48,14 @@ describe('exporter utilities', () => {
 				startTime: '10:00:00',
 				endTime: '10:30:00',
 				durationMinutes: 30,
-				model: 'gpt-4',
+				models: {
+					'gpt-4': {
+						inputTokens: 1200,
+						outputTokens: 800,
+						cacheTokens: 0,
+						costUSD: 0.315,
+					},
+				},
 				inputTokens: 1200,
 				outputTokens: 800,
 				cacheTokens: 0,
@@ -41,7 +67,14 @@ describe('exporter utilities', () => {
 				startTime: '11:00:00',
 				endTime: '11:15:00',
 				durationMinutes: 15,
-				model: 'gpt-4',
+				models: {
+					'gpt-4': {
+						inputTokens: 400,
+						outputTokens: 600,
+						cacheTokens: 100,
+						costUSD: 0.2,
+					},
+				},
 				inputTokens: 400,
 				outputTokens: 600,
 				cacheTokens: 100,

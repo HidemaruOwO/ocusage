@@ -1,16 +1,16 @@
+import { consola } from 'consola';
 import { define } from 'gunshi';
 import { renderHeader } from 'gunshi/renderer';
-import { consola } from 'consola';
+import { formatDate, formatDateHuman, formatTime, parseDate } from '@/lib/date';
+import type { SessionExportData } from '@/lib/exporter';
+import { formatAsCsv, formatSessionsAsJson, getModelNamesForCsv } from '@/lib/exporter';
+import { formatCost, formatDuration, formatTable, formatTokens } from '@/lib/formatter';
+import { dirExists } from '@/lib/fs';
+import type { Session } from '@/models';
+import { getSessionDurationMinutes, getSessionModelDisplay } from '@/models';
+import { aggregateSessions } from '@/services/aggregator';
 import { resolveMessagesDir, resolveModelsFile } from '@/services/config';
 import { loadAllModelConfigs } from '@/services/cost';
-import { aggregateSessions } from '@/services/aggregator';
-import { dirExists } from '@/lib/fs';
-import { formatDate, formatDateHuman, formatTime, parseDate } from '@/lib/date';
-import { formatCost, formatDuration, formatTable, formatTokens } from '@/lib/formatter';
-import { formatAsCsv, formatSessionsAsJson } from '@/lib/exporter';
-import type { SessionExportData } from '@/lib/exporter';
-import type { Session } from '@/models';
-import { getSessionDurationMinutes } from '@/models';
 
 type SortKey = 'date' | 'cost' | 'tokens';
 type SortOrder = 'asc' | 'desc';
@@ -94,7 +94,8 @@ export const filterSessions = (sessions: Session[], filters: SessionFilters): Se
 	}
 
 	if (filters.model) {
-		result = result.filter((session) => session.model === filters.model);
+		const model = filters.model;
+		result = result.filter((session) => session.models[model] !== undefined);
 	}
 
 	return result;
@@ -250,6 +251,8 @@ const sessionsCommand = define({
 
 		const baseRows = sorted.map((session) => {
 			const durationMinutes = roundMinutes(getSessionDurationMinutes(session));
+			const modelDisplay = getSessionModelDisplay(session);
+			const modelCsv = getModelNamesForCsv(session.models);
 
 			return {
 				sessionId: session.id,
@@ -257,7 +260,8 @@ const sessionsCommand = define({
 				startTime: formatTime(session.startTime),
 				endTime: formatTime(session.endTime),
 				durationMinutes,
-				model: session.model,
+				modelDisplay,
+				modelCsv,
 				inputTokens: session.usage.inputTokens,
 				outputTokens: session.usage.outputTokens,
 				cacheTokens: session.usage.cacheTokens,
@@ -274,7 +278,7 @@ const sessionsCommand = define({
 				startTime: formatTime(session.startTime),
 				endTime: formatTime(session.endTime),
 				durationMinutes,
-				model: session.model,
+				models: session.models,
 				inputTokens: session.usage.inputTokens,
 				outputTokens: session.usage.outputTokens,
 				cacheTokens: session.usage.cacheTokens,
@@ -289,7 +293,7 @@ const sessionsCommand = define({
 				row.startTime,
 				row.endTime,
 				formatDuration(row.durationMinutes),
-				row.model,
+				row.modelDisplay,
 				formatTokens(row.inputTokens),
 				formatTokens(row.outputTokens),
 				formatTokens(row.cacheTokens),
@@ -304,7 +308,7 @@ const sessionsCommand = define({
 				row.startTime,
 				row.endTime,
 				row.durationMinutes,
-				row.model,
+				row.modelCsv,
 				row.inputTokens,
 				row.outputTokens,
 				row.cacheTokens,

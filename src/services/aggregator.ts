@@ -1,4 +1,4 @@
-import type { Message, ModelConfigMap, Session, UsageSummary } from '@/models';
+import type { Message, ModelConfigMap, ModelUsage, Session, UsageSummary } from '@/models';
 import { createEmptyUsageSummary, mergeUsageSummaries } from '@/models';
 import { calculateMessageCost } from '@/services/cost';
 import { scanMessages } from '@/services/parser';
@@ -17,34 +17,46 @@ export const buildSession = (
 			id: 'unknown',
 			startTime: 0,
 			endTime: 0,
-			model: 'unknown',
+			models: {},
 			messages: [],
 			usage: createEmptyUsageSummary(),
 		};
 	}
 
-	const sessionId = messages[0].sessionID;
+	const sessionId = messages[0].sessionID || 'unknown';
 	let startTime = messages[0].time.created;
 	let endTime = messages[0].time.created;
 	let usage = createEmptyUsageSummary();
-	const models = new Set<string>();
+	const modelUsages: Record<string, ModelUsage> = {};
 
 	for (const message of messages) {
 		const created = message.time.created;
 		if (created < startTime) startTime = created;
 		if (created > endTime) endTime = created;
 
-		models.add(message.modelID);
-		usage = mergeUsageSummaries(usage, calculateMessageCost(message, configs, options));
-	}
+		const modelId = message.modelID?.trim() ? message.modelID : 'unknown';
+		const messageCost = calculateMessageCost(message, configs, options);
+		usage = mergeUsageSummaries(usage, messageCost);
 
-	const model = models.size === 1 ? Array.from(models)[0] : 'mixed';
+		const existing = modelUsages[modelId] ?? {
+			inputTokens: 0,
+			outputTokens: 0,
+			cacheTokens: 0,
+			costUSD: 0,
+		};
+		modelUsages[modelId] = {
+			inputTokens: existing.inputTokens + messageCost.inputTokens,
+			outputTokens: existing.outputTokens + messageCost.outputTokens,
+			cacheTokens: existing.cacheTokens + messageCost.cacheTokens,
+			costUSD: existing.costUSD + messageCost.totalCost,
+		};
+	}
 
 	return {
 		id: sessionId,
 		startTime,
 		endTime,
-		model,
+		models: modelUsages,
 		messages,
 		usage,
 	};
@@ -78,9 +90,21 @@ export const aggregateByModel = (sessions: Session[]): Map<string, UsageSummary>
 	const summary = new Map<string, UsageSummary>();
 
 	for (const session of sessions) {
-		const model = session.model;
-		const current = summary.get(model) ?? createEmptyUsageSummary();
-		summary.set(model, mergeUsageSummaries(current, session.usage));
+		for (const [modelId, modelUsage] of Object.entries(session.models)) {
+			const current = summary.get(modelId) ?? createEmptyUsageSummary();
+			summary.set(
+				modelId,
+				mergeUsageSummaries(current, {
+					inputTokens: modelUsage.inputTokens,
+					outputTokens: modelUsage.outputTokens,
+					cacheTokens: modelUsage.cacheTokens,
+					inputCost: 0,
+					outputCost: 0,
+					cacheCost: 0,
+					totalCost: modelUsage.costUSD,
+				}),
+			);
+		}
 	}
 
 	return summary;

@@ -1,13 +1,20 @@
 import { describe, expect, test } from 'bun:test';
-import type { Session } from '../../../src/models/session';
 import { filterSessions, resolveOutputFormat, sortSessions } from '../../../src/commands/sessions';
+import type { Session } from '../../../src/models/session';
 
 const createSession = (overrides: Partial<Session>): Session => {
 	return {
 		id: 'ses_default',
 		startTime: new Date(2025, 0, 1, 0, 0, 0).getTime(),
 		endTime: new Date(2025, 0, 1, 0, 10, 0).getTime(),
-		model: 'model-a',
+		models: {
+			'model-a': {
+				inputTokens: 10,
+				outputTokens: 5,
+				cacheTokens: 2,
+				costUSD: 0.17,
+			},
+		},
 		messages: [],
 		usage: {
 			inputTokens: 10,
@@ -27,17 +34,22 @@ describe('sessions command helpers', () => {
 		const sessionA = createSession({
 			id: 'ses_a',
 			startTime: new Date(2025, 0, 1, 0, 0, 0).getTime(),
-			model: 'model-a',
 		});
 		const sessionB = createSession({
 			id: 'ses_b',
 			startTime: new Date(2025, 0, 2, 0, 0, 0).getTime(),
-			model: 'model-a',
 		});
 		const sessionC = createSession({
 			id: 'ses_c',
 			startTime: new Date(2025, 0, 2, 0, 0, 0).getTime(),
-			model: 'model-b',
+			models: {
+				'model-b': {
+					inputTokens: 10,
+					outputTokens: 5,
+					cacheTokens: 2,
+					costUSD: 0.17,
+				},
+			},
 		});
 
 		const fromTime = new Date(2025, 0, 2, 0, 0, 0).getTime();

@@ -2,10 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { formatDate } from '../../src/lib/date';
 import type { Message } from '../../src/models/message';
 import type { ModelConfigMap } from '../../src/models/model';
 import type { Session } from '../../src/models/session';
-import { formatDate } from '../../src/lib/date';
 import {
 	aggregateByModel,
 	aggregateByPeriod,
@@ -68,7 +68,10 @@ describe('aggregator', () => {
 		expect(session.id).toBe('ses_default');
 		expect(session.startTime).toBe(1_700_000_000_000);
 		expect(session.endTime).toBe(1_700_000_000_500);
-		expect(session.model).toBe('model-a');
+		const modelUsage = session.models['model-a'];
+		expect(modelUsage).toBeDefined();
+		expect(modelUsage?.inputTokens).toBe(2000);
+		expect(modelUsage?.costUSD).toBeCloseTo(0.02, 6);
 		expect(session.usage.inputTokens).toBe(2000);
 		expect(session.usage.inputCost).toBeCloseTo(0.02, 6);
 	});
@@ -80,14 +83,16 @@ describe('aggregator', () => {
 		];
 
 		const session = buildSession(messages, configs);
-		expect(session.model).toBe('mixed');
+		const modelNames = Object.keys(session.models).sort();
+		expect(modelNames).toEqual(['model-a', 'model-b']);
 	});
 
 	test('buildSession falls back to unknown model when missing', () => {
 		const messages = [createMessage({ modelID: '', tokens: undefined })];
 
 		const session = buildSession(messages, configs);
-		expect(session.model).toBe('unknown');
+		const modelUsage = session.models.unknown;
+		expect(modelUsage).toBeDefined();
 	});
 
 	test('aggregateByModel sums usage by session model', () => {
@@ -104,7 +109,14 @@ describe('aggregator', () => {
 			id: 'ses_1',
 			startTime: new Date(2025, 0, 1).getTime(),
 			endTime: new Date(2025, 0, 1).getTime(),
-			model: 'model-a',
+			models: {
+				'model-a': {
+					inputTokens: 1,
+					outputTokens: 0,
+					cacheTokens: 0,
+					costUSD: 0.001,
+				},
+			},
 			messages: [],
 			usage: {
 				inputTokens: 1,
@@ -121,7 +133,14 @@ describe('aggregator', () => {
 			id: 'ses_2',
 			startTime: new Date(2025, 0, 1).getTime(),
 			endTime: new Date(2025, 0, 1).getTime(),
-			model: 'model-a',
+			models: {
+				'model-a': {
+					inputTokens: 2,
+					outputTokens: 0,
+					cacheTokens: 0,
+					costUSD: 0.002,
+				},
+			},
 			messages: [],
 			usage: {
 				inputTokens: 2,
