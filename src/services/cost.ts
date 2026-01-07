@@ -184,8 +184,8 @@ const findMatchingModel = (
 	return null;
 };
 
-// 未知モデルの警告を1回だけ表示するためのキャッシュ
-const warnedModels = new Set<string>();
+// 未知モデルの検出結果を集約するキャッシュ
+const unknownModels = new Set<string>();
 
 export const loadModelConfigs = async (
 	modelsFile: string,
@@ -287,10 +287,7 @@ export const calculateUsageCost = (
 
 	const config = findMatchingModel(modelId, configs, options);
 	if (!config) {
-		if (!options?.silent && !warnedModels.has(modelId)) {
-			warnedModels.add(modelId);
-			consola.warn(`Unknown model: ${modelId} (cost set to 0)`);
-		}
+		unknownModels.add(modelId);
 		return {
 			inputTokens,
 			outputTokens,
@@ -327,7 +324,11 @@ export const calculateMessageCost = (
 	return calculateUsageCost(normalizeTokens(message.tokens), message.modelID, configs, options);
 };
 
-/** テスト用: 警告キャッシュをリセット */
-export const resetWarnedModels = (): void => {
-	warnedModels.clear();
+export const getUnknownModels = (): string[] => {
+	return Array.from(unknownModels);
+};
+
+/** テスト用: 未知モデルのキャッシュをリセット */
+export const resetUnknownModels = (): void => {
+	unknownModels.clear();
 };

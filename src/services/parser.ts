@@ -1,5 +1,5 @@
-import type { Message } from '@/models';
 import { consola } from 'consola';
+import type { Message } from '@/models';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);

@@ -34,17 +34,21 @@ export const buildSession = (
 		if (created < startTime) startTime = created;
 		if (created > endTime) endTime = created;
 
-		const modelId = message.modelID?.trim() ? message.modelID : 'unknown';
+		const modelId = message.modelID?.trim();
 		const messageCost = calculateMessageCost(message, configs, options);
 		usage = mergeUsageSummaries(usage, messageCost);
+		if (!modelId) {
+			continue;
+		}
 
-		const existing = modelUsages[modelId] ?? {
+		const modelKey = message.modelID;
+		const existing = modelUsages[modelKey] ?? {
 			inputTokens: 0,
 			outputTokens: 0,
 			cacheTokens: 0,
 			costUSD: 0,
 		};
-		modelUsages[modelId] = {
+		modelUsages[modelKey] = {
 			inputTokens: existing.inputTokens + messageCost.inputTokens,
 			outputTokens: existing.outputTokens + messageCost.outputTokens,
 			cacheTokens: existing.cacheTokens + messageCost.cacheTokens,
