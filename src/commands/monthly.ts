@@ -1,42 +1,23 @@
 import { consola } from 'consola';
 import { define } from 'gunshi';
 import { renderHeader } from 'gunshi/renderer';
+import { filterSessions, resolveOutputFormat, sumPeriods } from '@/lib/command-utils';
 import { parseDate } from '@/lib/date';
 import type { PeriodExportData } from '@/lib/exporter';
 import { formatAsCsv, formatPeriodAsJson } from '@/lib/exporter';
 import { formatCost, formatTable, formatTokens } from '@/lib/formatter';
 import { dirExists } from '@/lib/fs';
+import { createSpinner } from '@/lib/spinner';
 import { printUnknownModelsSummary } from '@/lib/unknown-models';
-import type { Session } from '@/models';
 import { aggregateByPeriod, aggregateSessions } from '@/services/aggregator';
 import { resolveMessagesDir, resolveModelsFile, resolveOpenRouterApiKey } from '@/services/config';
 import {
+	clearUnknownModels,
 	getUnknownModels,
 	loadAllModelConfigs,
 	resetUnknownModels,
 	resolveUnknownModelsFromOpenRouter,
 } from '@/services/cost';
-
-type OutputFormat = 'table' | 'csv' | 'json';
-
-type OutputFormatOptions = {
-	json?: boolean;
-	csv?: boolean;
-};
-
-type SessionFilters = {
-	from?: number;
-	to?: number;
-	model?: string;
-};
-
-type PeriodTotals = {
-	sessions: number;
-	inputTokens: number;
-	outputTokens: number;
-	cacheTokens: number;
-	costUSD: number;
-};
 
 const TABLE_HEADERS = ['MONTH', 'SESSIONS', 'INPUT', 'OUTPUT', 'CACHE', 'COST', 'MODELS'];
 
@@ -49,54 +30,6 @@ const EXPORT_HEADERS = [
 	'cost_usd',
 	'models',
 ];
-
-const resolveOutputFormat = (options: OutputFormatOptions): OutputFormat | null => {
-	if (options.json && options.csv) return null;
-	if (options.json) return 'json';
-	if (options.csv) return 'csv';
-	return 'table';
-};
-
-const filterSessions = (sessions: Session[], filters: SessionFilters): Session[] => {
-	let result = sessions;
-
-	if (filters.from !== undefined) {
-		const from = filters.from;
-		result = result.filter((session) => session.startTime >= from);
-	}
-
-	if (filters.to !== undefined) {
-		const to = filters.to;
-		result = result.filter((session) => session.startTime <= to);
-	}
-
-	if (filters.model) {
-		const model = filters.model;
-		result = result.filter((session) => model in session.models);
-	}
-
-	return result;
-};
-
-const sumPeriods = (periods: PeriodExportData[]): PeriodTotals => {
-	return periods.reduce(
-		(acc, period) => {
-			acc.sessions += period.sessions;
-			acc.inputTokens += period.inputTokens;
-			acc.outputTokens += period.outputTokens;
-			acc.cacheTokens += period.cacheTokens;
-			acc.costUSD += period.costUSD;
-			return acc;
-		},
-		{
-			sessions: 0,
-			inputTokens: 0,
-			outputTokens: 0,
-			cacheTokens: 0,
-			costUSD: 0,
-		},
-	);
-};
 
 const monthlyCommand = define({
 	name: 'monthly',
@@ -145,9 +78,7 @@ const monthlyCommand = define({
 		});
 
 		if (!outputFormat) {
-			consola.error('Cannot use --json and --csv together');
-			Bun.exit(2);
-			return;
+			throw new Error('Cannot use --json and --csv together');
 		}
 
 		if (outputFormat === 'table') {
@@ -158,15 +89,14 @@ const monthlyCommand = define({
 			}
 		}
 
+		clearUnknownModels();
 		const isSilent = outputFormat === 'json' || outputFormat === 'csv';
 		const messagesDir = resolveMessagesDir(ctx.values.path);
 		const modelsPath = resolveModelsFile();
 
 		const exists = await dirExists(messagesDir);
 		if (!exists) {
-			consola.error(`Messages directory not found: ${messagesDir}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Messages directory not found: ${messagesDir}`);
 		}
 
 		const fromText = ctx.values.from;
@@ -174,16 +104,12 @@ const monthlyCommand = define({
 
 		const fromDate = fromText ? parseDate(fromText) : null;
 		if (fromText && !fromDate) {
-			consola.error(`Invalid --from date: ${fromText}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Invalid --from date: ${fromText}`);
 		}
 
 		const toDate = toText ? parseDate(toText) : null;
 		if (toText && !toDate) {
-			consola.error(`Invalid --to date: ${toText}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Invalid --to date: ${toText}`);
 		}
 
 		const fromTime = fromDate ? fromDate.getTime() : undefined;
@@ -200,10 +126,11 @@ const monthlyCommand = define({
 			: undefined;
 
 		if (fromTime !== undefined && toTime !== undefined && fromTime > toTime) {
-			consola.error('Invalid date range: --from is after --to');
-			Bun.exit(1);
-			return;
+			throw new Error('Invalid date range: --from is after --to');
 		}
+
+		const spinner = createSpinner('Processing sessions...', isSilent);
+		spinner.start();
 
 		const configs = await loadAllModelConfigs(modelsPath, { silent: isSilent });
 		let sessions = await aggregateSessions(messagesDir, configs, {
@@ -213,16 +140,20 @@ const monthlyCommand = define({
 		const unknowns = getUnknownModels();
 		const apiKey = resolveOpenRouterApiKey();
 		if (unknowns.length > 0) {
+			spinner.text = 'Resolving unknown models...';
 			resetUnknownModels();
 			const updatedConfigs = await resolveUnknownModelsFromOpenRouter(
 				unknowns,
 				configs,
 				apiKey ?? '',
 			);
+			spinner.text = 'Reprocessing sessions...';
 			sessions = await aggregateSessions(messagesDir, updatedConfigs, {
 				silent: isSilent,
 			});
 		}
+
+		spinner.succeed('Sessions processed');
 
 		const filtered = filterSessions(sessions, {
 			from: fromTime,

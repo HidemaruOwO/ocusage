@@ -467,7 +467,10 @@ export const getUnknownModels = (): string[] => {
 	return Array.from(unknownModels);
 };
 
-/** テスト用: 未知モデルのキャッシュをリセット */
-export const resetUnknownModels = (): void => {
+export const clearUnknownModels = (): void => {
 	unknownModels.clear();
+};
+
+export const resetUnknownModels = (): void => {
+	clearUnknownModels();
 };

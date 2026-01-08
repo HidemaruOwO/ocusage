@@ -1,80 +1,21 @@
 import { consola } from 'consola';
 import { define } from 'gunshi';
 import { renderHeader } from 'gunshi/renderer';
+import { filterSessions, resolveOutputFormat, sumModels } from '@/lib/command-utils';
 import { parseDate } from '@/lib/date';
 import type { ModelExportData } from '@/lib/exporter';
 import { formatAsCsv, formatModelsAsJson } from '@/lib/exporter';
 import { formatCost, formatTable, formatTokens } from '@/lib/formatter';
 import { dirExists } from '@/lib/fs';
+import { createSpinner } from '@/lib/spinner';
 import { printUnknownModelsSummary } from '@/lib/unknown-models';
-import type { Session } from '@/models';
 import { aggregateByModel, aggregateSessions } from '@/services/aggregator';
 import { resolveMessagesDir, resolveModelsFile } from '@/services/config';
 import { loadAllModelConfigs } from '@/services/cost';
 
-type OutputFormat = 'table' | 'csv' | 'json';
-
-type OutputFormatOptions = {
-	json?: boolean;
-	csv?: boolean;
-};
-
-type SessionFilters = {
-	from?: number;
-	to?: number;
-};
-
-type ModelTotals = {
-	inputTokens: number;
-	outputTokens: number;
-	cacheTokens: number;
-	costUSD: number;
-};
-
 const TABLE_HEADERS = ['MODEL', 'INPUT', 'OUTPUT', 'CACHE', 'COST'];
 
 const EXPORT_HEADERS = ['model', 'input_tokens', 'output_tokens', 'cache_tokens', 'total_cost'];
-
-const resolveOutputFormat = (options: OutputFormatOptions): OutputFormat | null => {
-	if (options.json && options.csv) return null;
-	if (options.json) return 'json';
-	if (options.csv) return 'csv';
-	return 'table';
-};
-
-const filterSessions = (sessions: Session[], filters: SessionFilters): Session[] => {
-	let result = sessions;
-
-	if (filters.from !== undefined) {
-		const from = filters.from;
-		result = result.filter((session) => session.startTime >= from);
-	}
-
-	if (filters.to !== undefined) {
-		const to = filters.to;
-		result = result.filter((session) => session.startTime <= to);
-	}
-
-	return result;
-};
-
-const sumModels = (models: ModelExportData[]): ModelTotals => {
-	return models.reduce(
-		(acc, model) => {
-			acc.inputTokens += model.inputTokens;
-			acc.outputTokens += model.outputTokens;
-			acc.cacheTokens += model.cacheTokens;
-			acc.costUSD += model.costUSD;
-			return acc;
-		},
-		{
-			inputTokens: 0,
-			outputTokens: 0,
-			cacheTokens: 0,
-			costUSD: 0,
-		},
-	);
-};
 
 const modelsCommand = define({
 	name: 'models',
@@ -118,9 +59,7 @@ const modelsCommand = define({
 		});
 
 		if (!outputFormat) {
-			consola.error('Cannot use --json and --csv together');
-			Bun.exit(2);
-			return;
+			throw new Error('Cannot use --json and --csv together');
 		}
 
 		if (outputFormat === 'table') {
@@ -137,9 +76,7 @@ const modelsCommand = define({
 
 		const exists = await dirExists(messagesDir);
 		if (!exists) {
-			consola.error(`Messages directory not found: ${messagesDir}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Messages directory not found: ${messagesDir}`);
 		}
 
 		const fromText = ctx.values.from;
@@ -147,16 +84,12 @@ const modelsCommand = define({
 
 		const fromDate = fromText ? parseDate(fromText) : null;
 		if (fromText && !fromDate) {
-			consola.error(`Invalid --from date: ${fromText}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Invalid --from date: ${fromText}`);
 		}
 
 		const toDate = toText ? parseDate(toText) : null;
 		if (toText && !toDate) {
-			consola.error(`Invalid --to date: ${toText}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Invalid --to date: ${toText}`);
 		}
 
 		const fromTime = fromDate ? fromDate.getTime() : undefined;
@@ -173,15 +106,17 @@ const modelsCommand = define({
 			: undefined;
 
 		if (fromTime !== undefined && toTime !== undefined && fromTime > toTime) {
-			consola.error('Invalid date range: --from is after --to');
-			Bun.exit(1);
-			return;
+			throw new Error('Invalid date range: --from is after --to');
 		}
+
+		const spinner = createSpinner('Processing sessions...', isSilent);
+		spinner.start();
 
 		const configs = await loadAllModelConfigs(modelsPath, { silent: isSilent });
 		const sessions = await aggregateSessions(messagesDir, configs, {
 			silent: isSilent,
 		});
+		spinner.succeed('Sessions processed');
 
 		const filtered = filterSessions(sessions, {
 			from: fromTime,

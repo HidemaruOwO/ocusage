@@ -6,6 +6,7 @@ import type { SessionExportData } from '@/lib/exporter';
 import { formatAsCsv, formatSessionsAsJson, getModelNamesForCsv } from '@/lib/exporter';
 import { formatCost, formatDuration, formatTable, formatTokens } from '@/lib/formatter';
 import { dirExists } from '@/lib/fs';
+import { createSpinner } from '@/lib/spinner';
 import { printUnknownModelsSummary } from '@/lib/unknown-models';
 import type { Session } from '@/models';
 import { getSessionDurationMinutes, getSessionModelDisplay } from '@/models';
@@ -179,9 +180,7 @@ const sessionsCommand = define({
 		});
 
 		if (!outputFormat) {
-			consola.error('Cannot use --json and --csv together');
-			Bun.exit(2);
-			return;
+			throw new Error('Cannot use --json and --csv together');
 		}
 
 		if (outputFormat === 'table') {
@@ -198,9 +197,7 @@ const sessionsCommand = define({
 
 		const exists = await dirExists(messagesDir);
 		if (!exists) {
-			consola.error(`Messages directory not found: ${messagesDir}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Messages directory not found: ${messagesDir}`);
 		}
 
 		const fromText = ctx.values.from;
@@ -208,16 +205,12 @@ const sessionsCommand = define({
 
 		const fromDate = fromText ? parseDate(fromText) : null;
 		if (fromText && !fromDate) {
-			consola.error(`Invalid --from date: ${fromText}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Invalid --from date: ${fromText}`);
 		}
 
 		const toDate = toText ? parseDate(toText) : null;
 		if (toText && !toDate) {
-			consola.error(`Invalid --to date: ${toText}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Invalid --to date: ${toText}`);
 		}
 
 		const fromTime = fromDate ? fromDate.getTime() : undefined;
@@ -234,15 +227,17 @@ const sessionsCommand = define({
 			: undefined;
 
 		if (fromTime !== undefined && toTime !== undefined && fromTime > toTime) {
-			consola.error('Invalid date range: --from is after --to');
-			Bun.exit(1);
-			return;
+			throw new Error('Invalid date range: --from is after --to');
 		}
+
+		const spinner = createSpinner('Processing sessions...', isSilent);
+		spinner.start();
 
 		const configs = await loadAllModelConfigs(modelsPath, { silent: isSilent });
 		const sessions = await aggregateSessions(messagesDir, configs, {
 			silent: isSilent,
 		});
+		spinner.succeed('Sessions processed');
 
 		const filtered = filterSessions(sessions, {
 			from: fromTime,

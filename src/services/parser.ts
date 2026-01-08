@@ -24,18 +24,37 @@ const getFileLabel = (filePath: string): string => {
 };
 
 export const parseMessageFile = async (filePath: string): Promise<Message | null> => {
+	const file = Bun.file(filePath);
+	const exists = await file.exists();
+	if (!exists) {
+		consola.warn(`Skipping missing message file: ${getFileLabel(filePath)}`);
+		return null;
+	}
+
+	let text: string;
 	try {
-		const data = await Bun.file(filePath).json();
-		if (!isValidMessage(data)) {
-			consola.warn(`Skipping invalid message file: ${getFileLabel(filePath)}`);
-			return null;
-		}
-		return data;
+		text = await file.text();
+	} catch (error) {
+		consola.warn(`Failed to read message file: ${getFileLabel(filePath)}`);
+		consola.debug(error);
+		return null;
+	}
+
+	let data: unknown;
+	try {
+		data = JSON.parse(text);
 	} catch (error) {
 		consola.warn(`Skipping corrupted file: ${getFileLabel(filePath)} (invalid JSON)`);
 		consola.debug(error);
 		return null;
 	}
+
+	if (!isValidMessage(data)) {
+		consola.warn(`Skipping invalid message file: ${getFileLabel(filePath)}`);
+		return null;
+	}
+
+	return data;
 };
 
 export async function* scanMessages(messagesDir: string): AsyncGenerator<Message> {

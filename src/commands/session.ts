@@ -4,6 +4,7 @@ import { renderHeader } from 'gunshi/renderer';
 import { formatDate, formatTime } from '@/lib/date';
 import { formatCost, formatTokens } from '@/lib/formatter';
 import { dirExists } from '@/lib/fs';
+import { createSpinner } from '@/lib/spinner';
 import type { Message, Session } from '@/models';
 import { getSessionDurationMinutes, getSessionModelDisplay, getSessionModelNames } from '@/models';
 import { aggregateSessions } from '@/services/aggregator';
@@ -146,9 +147,7 @@ const sessionCommand = define({
 
 		const exists = await dirExists(messagesDir);
 		if (!exists) {
-			consola.error(`Messages directory not found: ${messagesDir}`);
-			Bun.exit(1);
-			return;
+			throw new Error(`Messages directory not found: ${messagesDir}`);
 		}
 
 		if (!ctx.values.json) {
@@ -159,6 +158,9 @@ const sessionCommand = define({
 			}
 		}
 
+		const spinner = createSpinner('Processing session...', isSilent);
+		spinner.start();
+
 		const configs = await loadAllModelConfigs(modelsPath, { silent: isSilent });
 		const sessions = await aggregateSessions(messagesDir, configs, {
 			silent: isSilent,
@@ -166,10 +168,11 @@ const sessionCommand = define({
 		const session = sessions.find((item) => item.id === sessionId);
 
 		if (!session) {
-			consola.error(`Session not found: ${sessionId}`);
-			Bun.exit(1);
-			return;
+			spinner.stop();
+			throw new Error(`Session not found: ${sessionId}`);
 		}
+
+		spinner.succeed('Session processed');
 
 		if (ctx.values.json) {
 			const payload = buildSessionJsonOutput(session);

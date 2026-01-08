@@ -1,3 +1,4 @@
+import { consola } from 'consola';
 import { mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -23,6 +24,34 @@ const isCacheData = (value: unknown): value is CacheData => {
 	return true;
 };
 
+const readCacheFile = async (): Promise<CacheData | null> => {
+	const file = Bun.file(CACHE_FILE);
+	let text: string;
+	try {
+		text = await file.text();
+	} catch (error) {
+		consola.warn(`Failed to read cache file: ${CACHE_FILE}`);
+		consola.debug(error);
+		return null;
+	}
+
+	let data: unknown;
+	try {
+		data = JSON.parse(text);
+	} catch (error) {
+		consola.warn('Cache file is corrupted (invalid JSON).');
+		consola.debug(error);
+		return null;
+	}
+
+	if (!isCacheData(data)) {
+		consola.warn('Cache file has unexpected format. Ignoring it.');
+		return null;
+	}
+
+	return data;
+};
+
 export const getCacheDir = (): string => CACHE_DIR;
 export const getCacheFile = (): string => CACHE_FILE;
 
@@ -35,25 +64,33 @@ export const loadCache = async (): Promise<ModelConfigMap | null> => {
 	const exists = await file.exists();
 	if (!exists) return null;
 
-	let data: unknown;
-	try {
-		data = await file.json();
-	} catch {
-		return null;
-	}
-
-	if (!isCacheData(data)) return null;
+	const data = await readCacheFile();
+	if (!data) return null;
 	if (!isCacheValid(data.timestamp)) return null;
 	return data.models;
 };
 
 export const saveCache = async (models: ModelConfigMap): Promise<void> => {
-	await mkdir(CACHE_DIR, { recursive: true });
+	try {
+		await mkdir(CACHE_DIR, { recursive: true });
+	} catch (error) {
+		consola.error(`Failed to create cache directory: ${CACHE_DIR}`);
+		consola.debug(error);
+		throw error;
+	}
+
 	const payload: CacheData = {
 		timestamp: Date.now(),
 		models,
 	};
-	await Bun.write(CACHE_FILE, JSON.stringify(payload, null, 2));
+
+	try {
+		await Bun.write(CACHE_FILE, JSON.stringify(payload, null, 2));
+	} catch (error) {
+		consola.error(`Failed to write cache file: ${CACHE_FILE}`);
+		consola.debug(error);
+		throw error;
+	}
 };
 
 export const updateCache = async (modelId: string, config: ModelConfig): Promise<void> => {
@@ -65,14 +102,8 @@ export const updateCache = async (modelId: string, config: ModelConfig): Promise
 	};
 
 	if (exists) {
-		let data: unknown;
-		try {
-			data = await file.json();
-		} catch {
-			data = null;
-		}
-
-		if (data && isCacheData(data)) {
+		const data = await readCacheFile();
+		if (data) {
 			models = {
 				...data.models,
 				[modelId]: config,
@@ -83,10 +114,24 @@ export const updateCache = async (modelId: string, config: ModelConfig): Promise
 		}
 	}
 
-	await mkdir(CACHE_DIR, { recursive: true });
+	try {
+		await mkdir(CACHE_DIR, { recursive: true });
+	} catch (error) {
+		consola.error(`Failed to create cache directory: ${CACHE_DIR}`);
+		consola.debug(error);
+		throw error;
+	}
+
 	const payload: CacheData = {
 		timestamp,
 		models,
 	};
-	await Bun.write(CACHE_FILE, JSON.stringify(payload, null, 2));
+
+	try {
+		await Bun.write(CACHE_FILE, JSON.stringify(payload, null, 2));
+	} catch (error) {
+		consola.error(`Failed to write cache file: ${CACHE_FILE}`);
+		consola.debug(error);
+		throw error;
+	}
 };

@@ -1,3 +1,4 @@
+import { consola } from 'consola';
 import { cli, define } from 'gunshi';
 import dailyCommand from '@/commands/daily';
 import modelsCommand from '@/commands/models';
@@ -25,15 +26,21 @@ const main = define({
 	},
 });
 
-await cli(Bun.argv.slice(2), main, {
-	name: 'ocusage',
-	version: '0.1.0',
-	subCommands: {
-		sessions: sessionsCommand,
-		session: sessionCommand,
-		models: modelsCommand,
-		daily: dailyCommand,
-		weekly: weeklyCommand,
-		monthly: monthlyCommand,
-	},
-});
+try {
+	await cli(Bun.argv.slice(2), main, {
+		name: 'ocusage',
+		version: '0.1.0',
+		subCommands: {
+			sessions: sessionsCommand,
+			session: sessionCommand,
+			models: modelsCommand,
+			daily: dailyCommand,
+			weekly: weeklyCommand,
+			monthly: monthlyCommand,
+		},
+	});
+} catch (error) {
+	const message = error instanceof Error ? error.message : 'Unexpected error';
+	consola.error(message);
+	Bun.exit(1);
+}
