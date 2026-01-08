@@ -1,10 +1,10 @@
 import { consola } from 'consola';
-import { loadCache, saveCache } from '@/lib/cache';
+import { loadCache, saveCache, updateCache } from '@/lib/cache';
 import { dirExists, fileExists } from '@/lib/fs';
 import type { Message, ModelConfig, ModelConfigMap, TokenUsage, UsageSummary } from '@/models';
 import { createEmptyUsageSummary, DEFAULT_MODELS, getCacheCostPerMillion } from '@/models';
 import { resolveOpenRouterApiKey } from '@/services/config';
-import { fetchOpenRouterModels } from '@/services/openrouter';
+import { fetchOpenRouterModels, fetchSingleModelFromOpenRouter } from '@/services/openrouter';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -187,6 +187,30 @@ const findMatchingModel = (
 	return null;
 };
 
+const findModelInCache = (
+	modelId: string,
+	cachedModels: ModelConfigMap,
+): { key: string; config: ModelConfig } | null => {
+	const direct = cachedModels[modelId];
+	if (direct) return { key: modelId, config: direct };
+
+	const suffix = `/${modelId}`;
+	for (const [key, config] of Object.entries(cachedModels)) {
+		if (key.endsWith(suffix)) return { key, config };
+	}
+
+	const normalizedModelId = normalizeVersionSeparators(modelId);
+	const normalizedSuffix = `/${normalizedModelId}`;
+	for (const [key, config] of Object.entries(cachedModels)) {
+		const normalizedKey = normalizeVersionSeparators(key);
+		if (normalizedKey === normalizedModelId || normalizedKey.endsWith(normalizedSuffix)) {
+			return { key, config };
+		}
+	}
+
+	return null;
+};
+
 // 未知モデルの検出結果を集約するキャッシュ
 const unknownModels = new Set<string>();
 
@@ -275,7 +299,9 @@ export const loadAllModelConfigs = async (
 	const apiKey = resolveOpenRouterApiKey();
 	if (apiKey) {
 		const cached = await loadCache();
-		if (cached) {
+		const MIN_CACHE_COUNT = 100;
+		// キャッシュが十分な件数ある場合のみ使用
+		if (cached && Object.keys(cached).length >= MIN_CACHE_COUNT) {
 			configs = { ...cached, ...configs };
 		} else {
 			try {
@@ -289,11 +315,89 @@ export const loadAllModelConfigs = async (
 			} catch (error) {
 				logWarning('Failed to fetch OpenRouter models, using defaults', options);
 				logDebug(error, options);
+				// API エラーの場合はキャッシュがあればそれを使う
+				if (cached) {
+					configs = { ...cached, ...configs };
+				}
 			}
 		}
 	}
 
 	return { ...DEFAULT_MODELS, ...configs };
+};
+
+export const resolveUnknownModelsFromOpenRouter = async (
+	unknownModelIds: string[],
+	configs: ModelConfigMap,
+	apiKey: string,
+): Promise<ModelConfigMap> => {
+	if (unknownModelIds.length === 0) return configs;
+
+	const merged: ModelConfigMap = { ...configs };
+
+	// キャッシュからの検索は apiKey が無くても実行
+	let openRouterModels: ModelConfigMap = {};
+	const cached = await loadCache();
+	// キャッシュが十分な件数（100件以上）ある場合のみ使用
+	// それ以外は API から取得し直す
+	const MIN_CACHE_COUNT = 100;
+	if (cached && Object.keys(cached).length >= MIN_CACHE_COUNT) {
+		openRouterModels = cached;
+	} else if (apiKey) {
+		// apiKey がある場合のみ API から取得
+		try {
+			openRouterModels = await fetchOpenRouterModels(apiKey);
+			try {
+				await saveCache(openRouterModels);
+			} catch {
+				// Ignore
+			}
+		} catch {
+			// API エラーの場合はキャッシュがあればそれを使う
+			if (cached) {
+				openRouterModels = cached;
+			}
+		}
+	} else if (cached) {
+		// API キーがないがキャッシュがある場合は使う
+		openRouterModels = cached;
+	}
+
+	for (const modelId of unknownModelIds) {
+		// 1. configs から曖昧検索
+		const matchFromConfigs = findModelInCache(modelId, configs);
+		if (matchFromConfigs) {
+			merged[modelId] = matchFromConfigs.config;
+			continue;
+		}
+
+		// 2. OpenRouter モデル一覧から曖昧検索
+		const matchFromOpenRouter = findModelInCache(modelId, openRouterModels);
+		if (matchFromOpenRouter) {
+			merged[modelId] = matchFromOpenRouter.config;
+			try {
+				await updateCache(modelId, matchFromOpenRouter.config);
+			} catch {
+				// Ignore
+			}
+			continue;
+		}
+
+		// 3. author/slug 形式なら直接 API を呼ぶ（apiKey がある場合のみ）
+		if (modelId.includes('/') && apiKey) {
+			const config = await fetchSingleModelFromOpenRouter(modelId, apiKey);
+			if (config) {
+				merged[modelId] = config;
+				try {
+					await updateCache(modelId, config);
+				} catch {
+					// Ignore
+				}
+			}
+		}
+	}
+
+	return merged;
 };
 
 export const calculateUsageCost = (

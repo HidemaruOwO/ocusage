@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { ModelConfigMap } from '@/models';
+import type { ModelConfig, ModelConfigMap } from '@/models';
 
 const CACHE_DIR = join(homedir(), '.cache', 'ocusage');
 const CACHE_FILE = join(CACHE_DIR, 'models-cache.json');
@@ -51,6 +51,41 @@ export const saveCache = async (models: ModelConfigMap): Promise<void> => {
 	await mkdir(CACHE_DIR, { recursive: true });
 	const payload: CacheData = {
 		timestamp: Date.now(),
+		models,
+	};
+	await Bun.write(CACHE_FILE, JSON.stringify(payload, null, 2));
+};
+
+export const updateCache = async (modelId: string, config: ModelConfig): Promise<void> => {
+	const file = Bun.file(CACHE_FILE);
+	const exists = await file.exists();
+	let timestamp = Date.now();
+	let models: ModelConfigMap = {
+		[modelId]: config,
+	};
+
+	if (exists) {
+		let data: unknown;
+		try {
+			data = await file.json();
+		} catch {
+			data = null;
+		}
+
+		if (data && isCacheData(data)) {
+			models = {
+				...data.models,
+				[modelId]: config,
+			};
+			if (isCacheValid(data.timestamp)) {
+				timestamp = data.timestamp;
+			}
+		}
+	}
+
+	await mkdir(CACHE_DIR, { recursive: true });
+	const payload: CacheData = {
+		timestamp,
 		models,
 	};
 	await Bun.write(CACHE_FILE, JSON.stringify(payload, null, 2));

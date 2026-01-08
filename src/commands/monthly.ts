@@ -9,8 +9,13 @@ import { dirExists } from '@/lib/fs';
 import { printUnknownModelsSummary } from '@/lib/unknown-models';
 import type { Session } from '@/models';
 import { aggregateByPeriod, aggregateSessions } from '@/services/aggregator';
-import { resolveMessagesDir, resolveModelsFile } from '@/services/config';
-import { loadAllModelConfigs } from '@/services/cost';
+import { resolveMessagesDir, resolveModelsFile, resolveOpenRouterApiKey } from '@/services/config';
+import {
+	getUnknownModels,
+	loadAllModelConfigs,
+	resetUnknownModels,
+	resolveUnknownModelsFromOpenRouter,
+} from '@/services/cost';
 
 type OutputFormat = 'table' | 'csv' | 'json';
 
@@ -201,9 +206,23 @@ const monthlyCommand = define({
 		}
 
 		const configs = await loadAllModelConfigs(modelsPath, { silent: isSilent });
-		const sessions = await aggregateSessions(messagesDir, configs, {
+		let sessions = await aggregateSessions(messagesDir, configs, {
 			silent: isSilent,
 		});
+
+		const unknowns = getUnknownModels();
+		const apiKey = resolveOpenRouterApiKey();
+		if (unknowns.length > 0) {
+			resetUnknownModels();
+			const updatedConfigs = await resolveUnknownModelsFromOpenRouter(
+				unknowns,
+				configs,
+				apiKey ?? '',
+			);
+			sessions = await aggregateSessions(messagesDir, updatedConfigs, {
+				silent: isSilent,
+			});
+		}
 
 		const filtered = filterSessions(sessions, {
 			from: fromTime,

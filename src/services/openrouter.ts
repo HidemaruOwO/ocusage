@@ -1,7 +1,24 @@
 import type { ModelConfig, ModelConfigMap } from '@/models';
-import type { OpenRouterModel, OpenRouterModelsResponse } from '@/models/openrouter-response';
+import type {
+	OpenRouterModel,
+	OpenRouterModelsResponse,
+	OpenRouterPricing,
+} from '@/models/openrouter-response';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/models';
+
+type OpenRouterEndpoint = {
+	pricing: OpenRouterPricing;
+};
+
+type OpenRouterSingleModelResponse = {
+	data: {
+		id: string;
+		name: string;
+		context_length: number;
+		endpoints?: OpenRouterEndpoint[];
+	};
+};
 
 const toMillionTokenCost = (pricePerToken: string): number => {
 	const price = Number.parseFloat(pricePerToken);
@@ -41,4 +58,49 @@ export const fetchOpenRouterModels = async (apiKey: string): Promise<ModelConfig
 	}
 
 	return configs;
+};
+
+export const fetchSingleModelFromOpenRouter = async (
+	modelId: string,
+	apiKey: string,
+): Promise<ModelConfig | null> => {
+	const parts = modelId.split('/');
+	if (parts.length !== 2) return null;
+	if (!parts[0] || !parts[1]) return null;
+
+	let response: Response;
+	try {
+		response = await fetch(`${OPENROUTER_API_URL}/${modelId}/endpoints`, {
+			headers: {
+				Authorization: `Bearer ${apiKey}`,
+			},
+		});
+	} catch {
+		return null;
+	}
+
+	if (!response.ok) return null;
+
+	let data: OpenRouterSingleModelResponse;
+	try {
+		data = await response.json();
+	} catch {
+		return null;
+	}
+
+	const model = data.data;
+	const endpoints = model.endpoints;
+	if (!endpoints || endpoints.length === 0) return null;
+
+	const endpoint = endpoints[0];
+	if (!endpoint?.pricing) return null;
+
+	const configModel: OpenRouterModel = {
+		id: model.id,
+		name: model.name,
+		context_length: model.context_length,
+		pricing: endpoint.pricing,
+	};
+
+	return toModelConfig(configModel);
 };

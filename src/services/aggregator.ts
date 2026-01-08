@@ -120,7 +120,11 @@ export const aggregateByPeriod = (
 ): Map<string, { sessions: number; usage: UsageSummary; models: Record<string, ModelUsage> }> => {
 	const summary = new Map<
 		string,
-		{ sessions: number; usage: UsageSummary; models: Record<string, ModelUsage> }
+		{
+			sessions: number;
+			usage: UsageSummary;
+			models: Record<string, ModelUsage>;
+		}
 	>();
 
 	for (const session of sessions) {
