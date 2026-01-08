@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint & Format check
+        run: bun run check
+
+      - name: Run tests
+        run: bun test
+
+  compile-quick:
+    name: Compile (Quick Check)
+    needs: [lint-test]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set version with commit hash
+        run: |
+          VERSION=$(jq -r .version package.json)
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          if [ "$MAJOR" = "0" ]; then
+            NEW_VERSION="${VERSION}-${GITHUB_SHA::7}"
+            jq --arg v "$NEW_VERSION" '.version = $v' package.json > package.json.tmp
+            mv package.json.tmp package.json
+          fi
+
+      - name: Compile
+        run: bun build src/index.ts --compile --outfile=ocusage-linux-x64 --production
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocusage-linux-x64
+          path: ocusage-linux-x64
+
+  compile-all:
+    name: Compile (${{ matrix.os }})
+    needs: [lint-test]
+    if: github.event_name == 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: ocusage-linux-x64
+          - os: ubuntu-24.04-arm
+            artifact: ocusage-linux-arm64
+          - os: windows-latest
+            artifact: ocusage-windows-x64.exe
+          - os: windows-11-arm
+            artifact: ocusage-windows-arm64.exe
+          - os: macos-13
+            artifact: ocusage-darwin-x64
+          - os: macos-latest
+            artifact: ocusage-darwin-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+        fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set version with commit hash
+        shell: bash
+        run: |
+          VERSION=$(jq -r .version package.json)
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          if [ "$MAJOR" = "0" ]; then
+            NEW_VERSION="${VERSION}-${GITHUB_SHA::7}"
+            jq --arg v "$NEW_VERSION" '.version = $v' package.json > package.json.tmp
+            mv package.json.tmp package.json
+          fi
+
+      - name: Compile
+        run: bun build src/index.ts --compile --outfile=${{ matrix.artifact }} --production
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}

@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: ocusage-linux-x64
+          - os: ubuntu-24.04-arm
+            artifact: ocusage-linux-arm64
+          - os: windows-latest
+            artifact: ocusage-windows-x64.exe
+          - os: windows-11-arm
+            artifact: ocusage-windows-arm64.exe
+          - os: macos-13
+            artifact: ocusage-darwin-x64
+          - os: macos-latest
+            artifact: ocusage-darwin-arm64
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set version from release tag
+        shell: bash
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$TAG_VERSION" '.version = $v' package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Compile
+        run: bun build src/index.ts --compile --outfile=${{ matrix.artifact }} --production
+
+      - name: Upload to Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.artifact }}" --clobber
+
+  publish:
+    name: Publish to npm
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Set version from release tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$TAG_VERSION" '.version = $v' package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Publish
+        run: bun publish --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
