@@ -12,6 +12,7 @@ import {
 	loadModelConfigs,
 	loadModelConfigsFromDir,
 	resetUnknownModels,
+	resolveUnknownModelsFromOpenRouter,
 } from '../../src/services/cost';
 
 const createTempDir = async (): Promise<string> => {
@@ -26,6 +27,13 @@ const baseConfig: ModelConfigMap = {
 		contextWindow: 1000,
 		description: 'Model A',
 	},
+};
+
+const minimaxConfig = {
+	inputCostPerMillion: 1,
+	outputCostPerMillion: 2,
+	contextWindow: 8000,
+	description: 'Minimax M2.1',
 };
 
 const originalOpenRouterKey = Bun.env.OPENROUTER_API_KEY;
@@ -259,6 +267,54 @@ describe('cost calculator', () => {
 
 			const result = calculateMessageCost(message, configs, { silent: true });
 			expect(result.totalCost).toBeCloseTo(0.017, 5);
+		});
+	});
+
+	describe('resolveUnknownModelsFromOpenRouter', () => {
+		test('returns configs unchanged when unknownModelIds is empty', async () => {
+			const configs = { ...baseConfig };
+			const result = await resolveUnknownModelsFromOpenRouter([], configs, 'test-key');
+			expect(result).toEqual(configs);
+		});
+
+		test('returns configs unchanged when apiKey is empty', async () => {
+			const configs = { ...baseConfig };
+			const result = await resolveUnknownModelsFromOpenRouter(['unknown-model'], configs, '');
+			expect(result).toEqual(configs);
+		});
+
+		test('returns configs unchanged when non-author/slug has no config match', async () => {
+			const configs = { ...baseConfig };
+			const result = await resolveUnknownModelsFromOpenRouter(
+				['invalid-format-model'],
+				configs,
+				'test-key',
+			);
+			expect(result).toEqual(configs);
+		});
+
+		test('uses config match when suffix matches', async () => {
+			const configs: ModelConfigMap = {
+				'minimax/minimax-m2.1': minimaxConfig,
+			};
+			const result = await resolveUnknownModelsFromOpenRouter(
+				['minimax-m2.1'],
+				configs,
+				'test-key',
+			);
+			expect(result['minimax-m2.1']).toEqual(minimaxConfig);
+		});
+
+		test('uses config match when version separators normalize', async () => {
+			const configs: ModelConfigMap = {
+				'minimax/minimax-m2.1': minimaxConfig,
+			};
+			const result = await resolveUnknownModelsFromOpenRouter(
+				['minimax-m2-1'],
+				configs,
+				'test-key',
+			);
+			expect(result['minimax-m2-1']).toEqual(minimaxConfig);
 		});
 	});
 
