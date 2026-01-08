@@ -17,10 +17,8 @@ jobs:
             artifact: ocusage-linux-arm64
           - os: windows-latest
             artifact: ocusage-windows-x64.exe
-          - os: windows-11-arm
-            artifact: ocusage-windows-arm64.exe
-          - os: macos-13
-            artifact: ocusage-darwin-x64
+          # - os: windows-11-arm
+          # artifact: ocusage-windows-arm64.exe
           - os: macos-latest
             artifact: ocusage-darwin-arm64
     runs-on: ${{ matrix.os }}
