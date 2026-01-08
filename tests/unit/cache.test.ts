@@ -55,6 +55,34 @@ describe('cache storage', () => {
 		}
 	});
 
+	test('loadCache returns null for corrupted JSON', async () => {
+		const home = await createTempHome();
+		const originalHome = Bun.env.HOME;
+		Bun.env.HOME = home;
+
+		try {
+			const cache = await import(
+				`../../src/lib/cache?home=${encodeURIComponent(home)}&case=corrupt`
+			);
+			const models: ModelConfigMap = {
+				'model-a': {
+					inputCostPerMillion: 1,
+					outputCostPerMillion: 2,
+					contextWindow: 100,
+					description: 'Model A',
+				},
+			};
+
+			await cache.saveCache(models);
+			await Bun.write(cache.getCacheFile(), '{invalid json');
+			const loaded = await cache.loadCache();
+			expect(loaded).toBeNull();
+		} finally {
+			restoreEnvValue('HOME', originalHome);
+			await rm(home, { recursive: true, force: true });
+		}
+	});
+
 	test('updateCache keeps timestamp when cache is valid', async () => {
 		const home = await createTempHome();
 		const originalHome = Bun.env.HOME;

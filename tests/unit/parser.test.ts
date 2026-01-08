@@ -72,6 +72,18 @@ describe('parser utilities', () => {
 		}
 	});
 
+	test('parseMessageFile returns null for missing file', async () => {
+		const dir = await createTempDir();
+		const filePath = join(dir, 'msg_missing.json');
+
+		try {
+			const message = await parseMessageFile(filePath);
+			expect(message).toBeNull();
+		} finally {
+			await rm(dir, { recursive: true, force: true });
+		}
+	});
+
 	test('scanMessages yields only valid message files', async () => {
 		const dir = await createTempDir();
 		const validPath = join(dir, 'msg_valid.json');

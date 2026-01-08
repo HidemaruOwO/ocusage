@@ -7,11 +7,11 @@ import type { ModelConfigMap } from '../../src/models/model';
 import {
 	calculateMessageCost,
 	calculateUsageCost,
+	clearUnknownModels,
 	getUnknownModels,
 	loadAllModelConfigs,
 	loadModelConfigs,
 	loadModelConfigsFromDir,
-	resetUnknownModels,
 	resolveUnknownModelsFromOpenRouter,
 } from '../../src/services/cost';
 
@@ -177,7 +177,7 @@ describe('cost calculator', () => {
 	});
 
 	test('calculateUsageCost tracks unknown models', () => {
-		resetUnknownModels();
+		clearUnknownModels();
 		const tokens: TokenUsage = {
 			input: 0,
 			output: 0,
@@ -194,7 +194,7 @@ describe('cost calculator', () => {
 		calculateUsageCost(tokens, 'other-unknown', configs);
 
 		expect(getUnknownModels()).toEqual(['unknown-model', 'other-unknown']);
-		resetUnknownModels();
+		clearUnknownModels();
 	});
 
 	test('calculateMessageCost returns empty usage without tokens', () => {
