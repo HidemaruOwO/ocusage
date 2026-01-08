@@ -1,7 +1,7 @@
-import { consola } from 'consola';
 import { mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { consola } from 'consola';
 import type { ModelConfig, ModelConfigMap } from '@/models';
 
 const CACHE_DIR = join(homedir(), '.cache', 'ocusage');
